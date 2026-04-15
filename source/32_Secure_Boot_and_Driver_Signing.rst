@@ -567,21 +567,21 @@ These certificates can be validated using the contents of the signature database
        | EFI_CERT_X509_SHA256_GUID    (when applicable)  
        | EFI_CERT_X509_SHA384_GUID    (when applicable)  
        | EFI_CERT_X509_SHA512_GUID    (when applicable)
-	   | EFI_CERT_X509_SM3_GUID       (when applicable)
+       | EFI_CERT_X509_SM3_GUID       (when applicable)
    * - WIN_CERT_TYPE_PKCS_SIGNED_DATA
      - | EFI_CERT_X509_GUID
        | EFI_CERT_RSA2048_GUID        (when applicable)  
        | EFI_CERT_X509_SHA256_GUID    (when applicable)  
        | EFI_CERT_X509_SHA384_GUID    (when applicable)  
        | EFI_CERT_X509_SHA512_GUID    (when applicable)
-	   | EFI_CERT_X509_SM3_GUID       (when applicable)
+       | EFI_CERT_X509_SM3_GUID       (when applicable)
    * - (Always applicable regardless of whether a certificate is present or not)
-     - | EFI_CERT_SHA1_GUID, 
-       | EFI_CERT_SHA224_GUID, 
-       | EFI_CERT_SHA256_GUID, 
-       | EFI_CERT_SHA384_GUID, 
-       | EFI_CERT_SHA512_GUID,
-	   | EFI_CERT_SM3_GUID
+     - | EFI_CERT_SHA1_GUID
+       | EFI_CERT_SHA224_GUID
+       | EFI_CERT_SHA256_GUID
+       | EFI_CERT_SHA384_GUID
+       | EFI_CERT_SHA512_GUID
+       | EFI_CERT_SM3_GUID
        | In this case, the database contains the hash of the image.
 
 
@@ -927,7 +927,7 @@ Each signature has an owner *SignatureOwner,* which is a GUID identifying the ag
 
    #define EFI_CERT_SHA256_GUID \
      { 0xc1c41626, 0x504c, 0x4092, \
-     { 0xac, 0xa9, 0x41, 0xf9, 0x36, 0x93, 0x43, 0x28 } };
+     { 0xac, 0xa9, 0x41, 0xf9, 0x36, 0x93, 0x43, 0x28 } }
 
 
 This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.
@@ -936,7 +936,7 @@ This identifies a signature containing a SHA-256 hash. The *SignatureHeader* siz
 
    #define EFI_CERT_RSA2048_GUID \
      { 0x3c5766e8, 0x269c, 0x4e34, \
-     { 0xaa, 0x14, 0xed, 0x77, 0x6e, 0x85, 0xb3, 0xb6 } };
+     { 0xaa, 0x14, 0xed, 0x77, 0x6e, 0x85, 0xb3, 0xb6 } }
 
 
 This identifies a signature containing an RSA-2048 key. The key (only the modulus since the public key exponent is known to be 0x10001) shall be stored in big-endian order.
@@ -948,7 +948,7 @@ The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always b
 
    #define EFI_CERT_RSA2048_SHA256_GUID \
      { 0xe2b36190, 0x879b, 0x4a3d, \
-     { 0xad, 0x8d, 0xf2, 0xe7, 0xbb, 0xa3, 0x27, 0x84 } };
+     { 0xad, 0x8d, 0xf2, 0xe7, 0xbb, 0xa3, 0x27, 0x84 } }
 
 
 This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
@@ -957,7 +957,7 @@ This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. T
 
    #define EFI_CERT_SHA1_GUID \
      { 0x826ca512, 0xcf10, 0x4ac9, \
-     { 0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd } };
+     { 0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd } }
 
 
 This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 20 bytes.
@@ -966,7 +966,7 @@ This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall a
 
    #define EFI_CERT_RSA2048_SHA1_GUID \
      { 0x67f8444f, 0x8743, 0x48f1, \
-     { 0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80 } };
+     { 0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80 } }
 
 
 This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
@@ -975,8 +975,8 @@ This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The
 
    #define *EFI_CERT_X509_GUID* \
      { 0xa5c059a1, 0x94e4, 0x4aa7, \
-     { 0x87, 0xb5, 0xab, 0x15, 0x5c, 0x2b, 0xf0, 0x72 } };
-  
+     { 0x87, 0xb5, 0xab, 0x15, 0x5c, 0x2b, 0xf0, 0x72 } }
+
 
 This identifies a signature based on a DER-encoded X.509 certificate. If the signature is an X.509 certificate then verification of the signature of an image should validate the public key certificate in the image using certificate path verification, up to this X.509 certificate as a trusted root. If the signature is in a device signature variable, this signature is one root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* may vary but shall always be 16 (size of the *SignatureOwner* component) + the size of the certificate itself.
 
@@ -987,7 +987,7 @@ This identifies a signature based on a DER-encoded X.509 certificate. If the sig
 
    #define EFI_CERT_SHA224_GUID \
      { 0xb6e5233, 0xa65c, 0x44c9, \
-     {0x94, 0x07, 0xd9, 0xab, 0x83, 0xbf, 0xc8, 0xbd} };
+     { 0x94, 0x07, 0xd9, 0xab, 0x83, 0xbf, 0xc8, 0xbd } }
 
 This identifies a signature containing a SHA-224 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 28 bytes.
 
@@ -995,7 +995,7 @@ This identifies a signature containing a SHA-224 hash. The *SignatureHeader* siz
 
    #define EFI_CERT_SHA384_GUID \
      { 0xff3e5307, 0x9fd0, 0x48c9, \
-     {0x85, 0xf1, 0x8a, 0xd5, 0x6c, 0x70, 0x1e, 0x01}};
+     { 0x85, 0xf1, 0x8a, 0xd5, 0x6c, 0x70, 0x1e, 0x01 } }
 
 
 This identifies a signature containing a SHA-384 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 48 bytes.
@@ -1005,7 +1005,7 @@ This identifies a signature containing a SHA-384 hash. The *SignatureHeader* siz
 
    #define EFI_CERT_SHA512_GUID \
      { 0x93e0fae, 0xa6c4, 0x4f50, \
-     {0x9f, 0x1b, 0xd4, 0x1e, 0x2b, 0x89, 0xc1, 0x9a}}
+     { 0x9f, 0x1b, 0xd4, 0x1e, 0x2b, 0x89, 0xc1, 0x9a } }
 
 
 This identifies a signature containing a SHA-512 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 64 bytes.
@@ -1015,8 +1015,8 @@ This identifies a signature containing a SHA-512 hash. The *SignatureHeader* siz
 
    #define EFI_CERT_X509_SHA256_GUID \
      { 0x3bd2a492, 0x96c0, 0x4079, \
-     { 0xb4, 0x20, 0xfc, 0xf9, 0x8e, 0xf1, 0x03, 0xed } };
-  
+     { 0xb4, 0x20, 0xfc, 0xf9, 0x8e, 0xf1, 0x03, 0xed } }
+
 
 **Prototype**
 
@@ -1046,7 +1046,7 @@ TimeOfRevocation
 
    #define EFI_CERT_X509_SHA384_GUID \
      { 0x7076876e, 0x80c2, 0x4ee6, \
-     { 0xaa, 0xd2, 0x28, 0xb3, 0x49, 0xa6, 0x86, 0x5b } };
+     { 0xaa, 0xd2, 0x28, 0xb3, 0x49, 0xa6, 0x86, 0x5b } }
 
 
 **Prototype**
@@ -1075,7 +1075,7 @@ This identifies a signature containing the SHA384 hash of an X.509 certificateâ€
 
    #define EFI_CERT_X509_SHA512_GUID \
      { 0x446dbf63, 0x2502, 0x4cda, \
-     { 0xbc, 0xfa, 0x24, 0x65, 0xd2, 0xb0, 0xfe, 0x9d } };
+     { 0xbc, 0xfa, 0x24, 0x65, 0xd2, 0xb0, 0xfe, 0x9d } }
 
 
 **Prototype**
@@ -1115,7 +1115,7 @@ The SignatureSize shall always be 16 (size of SignatureOwner component) + 32 byt
 
    #define EFI_CERT_X509_SM3_GUID \
      { 0x60d807e5, 0x10b4, 0x49a9,  \
-     {0x93, 0x31, 0xe4, 0x4, 0x37, 0x88, 0x8d, 0x37 } }
+     { 0x93, 0x31, 0xe4, 0x4, 0x37, 0x88, 0x8d, 0x37 } }
 
 **Prototype**
 
@@ -1144,7 +1144,7 @@ This identifies a signature containing the SM3 hash of an X.509 certificate's To
 
    #define EFI_CERT_EXTERNAL_MANAGEMENT_GUID \
      { 0x452e8ced, 0xdfff, 0x4b8c, \
-     { 0xae, 0x01, 0x51, 0x18, 0x86, 0x2e, 0x68, 0x2c } };
+     { 0xae, 0x01, 0x51, 0x18, 0x86, 0x2e, 0x68, 0x2c } }
 
 
 This *SignatureType* describes a pseudo-signature which will not facilitate authentication. It is only meaningful within a signature list used for authenticating writes through *SetVariable(),* and is only effective if it is the only signature present in that signature list. It allows a signature list to be populated without providing any means for *SetVariable()* to succeed. This signature type is intended for use on a platform with an external out-of-band management agent (e.g. hypervisor or service processor). When a platform is configured such that only signatures of this *SignatureType* are available for authenticating writes to a variable, that variable may only be modified by the external management agent using a platform-specific interface. 

@@ -568,6 +568,11 @@ These certificates can be validated using the contents of the signature database
        | EFI_CERT_X509_SHA384_GUID    (when applicable)  
        | EFI_CERT_X509_SHA512_GUID    (when applicable)
        | EFI_CERT_X509_SM3_GUID       (when applicable)
+       | EFI_CERT_V2_X509_GUID        (when applicable)
+       | EFI_CERT_V2_X509_SHA256_GUID (when applicable)
+       | EFI_CERT_V2_X509_SHA384_GUID (when applicable)
+       | EFI_CERT_V2_X509_SHA512_GUID (when applicable)
+       | EFI_CERT_V2_X509_SM3_GUID    (when applicable)
    * - WIN_CERT_TYPE_PKCS_SIGNED_DATA
      - | EFI_CERT_X509_GUID
        | EFI_CERT_RSA2048_GUID        (when applicable)  
@@ -575,6 +580,11 @@ These certificates can be validated using the contents of the signature database
        | EFI_CERT_X509_SHA384_GUID    (when applicable)  
        | EFI_CERT_X509_SHA512_GUID    (when applicable)
        | EFI_CERT_X509_SM3_GUID       (when applicable)
+       | EFI_CERT_V2_X509_GUID        (when applicable)
+       | EFI_CERT_V2_X509_SHA256_GUID (when applicable)
+       | EFI_CERT_V2_X509_SHA384_GUID (when applicable)
+       | EFI_CERT_V2_X509_SHA512_GUID (when applicable)
+       | EFI_CERT_V2_X509_SM3_GUID    (when applicable)
    * - (Always applicable regardless of whether a certificate is present or not)
      - | EFI_CERT_SHA1_GUID
        | EFI_CERT_SHA224_GUID
@@ -582,6 +592,10 @@ These certificates can be validated using the contents of the signature database
        | EFI_CERT_SHA384_GUID
        | EFI_CERT_SHA512_GUID
        | EFI_CERT_SM3_GUID
+       | EFI_CERT_V2_SHA256_GUID
+       | EFI_CERT_V2_SHA384_GUID
+       | EFI_CERT_V2_SHA512_GUID
+       | EFI_CERT_V2_SM3_GUID
        | In this case, the database contains the hash of the image.
 
 
@@ -870,13 +884,20 @@ The format of a signature database.
      UINT8                    SignatureData [_];
    }   EFI_SIGNATURE_DATA;
 
+   typedef struct _EFI_SIGNATURE_V2_DATA {
+     UINT8                    SignatureData [_];
+   }   EFI_SIGNATURE_V2_DATA;
+
    typedef struct _EFI_SIGNATURE_LIST {
      EFI_GUID                 SignatureType;
      UINT32                   SignatureListSize;
      UINT32                   SignatureHeaderSize;
      UINT32                   SignatureSize;
    //   UINT8                 SignatureHeader [SignatureHeaderSize];
-   //   EFI_SIGNATURE_DATA    Signatures [__][SignatureSize];
+   //   union {
+   //     EFI_SIGNATURE_DATA    Signatures [__][SignatureSize];
+   //     EFI_SIGNATURE_V2_DATA Signatures [__][SignatureSize];
+   //   };
    }   EFI_SIGNATURE_LIST;
    #pragma pack()
   
@@ -961,9 +982,21 @@ This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. T
      { 0x87, 0xb5, 0xab, 0x15, 0x5c, 0x2b, 0xf0, 0x72 } }
 
 
-This identifies a signature based on a DER-encoded X.509 certificate. If the signature is an X.509 certificate then verification of the signature of an image should validate the public key certificate in the image using certificate path verification, up to this X.509 certificate as a trusted root. If the signature is in a device signature variable, this signature is one root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* may vary but shall always be 16 (size of the *SignatureOwner* component) + the size of the certificate itself.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
+This identifies a signature based on a DER-encoded X.509 certificate. If the signature is an X.509 certificate then verification of the signature of an image should validate the public key certificate in the image using certificate path verification, up to this X.509 certificate as a trusted root. If the signature is in a device signature variable, this signature is one root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* may vary but shall always be 16 (size of the *SignatureOwner* component) + the size of the certificate itself.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If support for EFI_CERT_V2_X509_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_X509_GUID format.
 
 **NOTE**: *This means that each certificate will normally be in a separate* EFI_SIGNATURE_LIST.
+
+
+.. code-block::
+
+   #define *EFI_CERT_V2_X509_GUID* \
+     { 0x79518039, 0x4715, 0x4393,
+     { 0xbd, 0xf8, 0xd8, 0xe3, 0xc6, 0x7f, 0xba, 0xc7 } }
+
+
+This identifies a signature based on a DER-encoded X.509 certificate. If the signature is an X.509 certificate then verification of the signature of an image should validate the public key certificate in the image using certificate path verification, up to this X.509 certificate as a trusted root. If the signature is in a device signature variable, this signature is one root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* may vary but shall always be the size of the certificate itself, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  Only use this type if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
+
+**NOTE**: *Each certificate must always be in a separate* EFI_SIGNATURE_LIST.
 
 
 .. code-block::
@@ -993,7 +1026,17 @@ This identifies a signature containing a SHA-224 hash. The *SignatureHeader* siz
      { 0xac, 0xa9, 0x41, 0xf9, 0x36, 0x93, 0x43, 0x28 } }
 
 
-This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
+This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If support for EFI_CERT_V2_SHA256_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_SHA256_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_SHA256_GUID \
+     { 0x65325437, 0xca92, 0x441e, \
+     { 0x94, 0x3d, 0x4e, 0x00, 0x3f, 0xae, 0xda, 0x97 } }
+
+
+This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 32 bytes, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_SHA256_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
 
 
 .. code-block::
@@ -1003,7 +1046,17 @@ This identifies a signature containing a SHA-256 hash. The *SignatureHeader* siz
      { 0x85, 0xf1, 0x8a, 0xd5, 0x6c, 0x70, 0x1e, 0x01 } }
 
 
-This identifies a signature containing a SHA-384 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 48 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
+This identifies a signature containing a SHA-384 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 48 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If support for EFI_CERT_V2_SHA384_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_SHA384_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_SHA384_GUID \
+     { 0x45db3553, 0xf9a6, 0x4026, \
+     { 0x8e, 0x48, 0xeb, 0x1e, 0x4b, 0x07, 0x18, 0x5c } }
+
+
+This identifies a signature containing a SHA-384 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 48 bytes, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_SHA384_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
 
 
 .. code-block::
@@ -1013,7 +1066,17 @@ This identifies a signature containing a SHA-384 hash. The *SignatureHeader* siz
      { 0x9f, 0x1b, 0xd4, 0x1e, 0x2b, 0x89, 0xc1, 0x9a } }
 
 
-This identifies a signature containing a SHA-512 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 64 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
+This identifies a signature containing a SHA-512 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 64 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If support for EFI_CERT_V2_SHA512_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_SHA512_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_SHA512_GUID \
+     { 0xd2291d97, 0xf066, 0x4abf, \
+     { 0x9c, 0x57, 0x63, 0x63, 0xe5, 0xfd, 0x69, 0x03 } }
+
+
+This identifies a signature containing a SHA-512 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 64 bytes, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_SHA512_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
 
 
 .. code-block::
@@ -1044,7 +1107,34 @@ ToBeSignedHash
 TimeOfRevocation
   The time that the certificate shall be considered to be revoked. 
 
-  This identifies a signature containing the SHA256 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 48 bytes for an *EFI_CERT_X509_SHA256* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+  This identifies a signature containing the SHA256 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 48 bytes for an *EFI_CERT_X509_SHA256* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.  If support for EFI_CERT_V2_X509_SHA256_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_X509_SHA256_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_X509_SHA256_GUID \
+     { 0xaf4d21cd, 0x7627, 0x4b81, \
+     { 0x9e, 0x96, 0xd4, 0xf3, 0xbb, 0xc3, 0xfa, 0xe9 } }
+
+
+**Prototype**
+
+.. code-block::
+
+   #pragma pack(1)
+   typedef struct _EFI_CERT_V2_X509_SHA256 {
+     EFI_SHA256_HASH          ToBeSignedHash;
+   }   EFI_CERT_V2_X509_SHA256;
+   #pragma pack()
+
+
+**Members**
+
+
+ToBeSignedHash
+  The SHA256 hash of an X.509 certificate's To-Be-Signed contents.
+
+  This identifies a signature containing the SHA256 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 32 bytes for an *EFI_CERT_V2_X509_SHA256* structure, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_X509_SHA256_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
 
 
 .. code-block::
@@ -1074,7 +1164,34 @@ ToBeSignedHash
 TimeOfRevocation
   The time that the certificate shall be considered to be revoked. 
 
-This identifies a signature containing the SHA384 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 64 bytes for an *EFI_CERT_X509_SHA384* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SHA384 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 64 bytes for an *EFI_CERT_X509_SHA384* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.  If support for EFI_CERT_V2_X509_SHA384_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_X509_SHA384_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_X509_SHA384_GUID \
+     { 0x78860e15, 0xf2eb, 0x-4d16 \
+     { 0x81, 0x56, 0x23, 0x15, 0x18, 0xfb, 0x76, 0x88 } }
+
+
+**Prototype**
+
+.. code-block::
+
+   #pragma pack(1)
+   typedef struct _EFI_CERT_V2_X509_SHA384 {
+     EFI_SHA384_HASH             ToBeSignedHash;
+   }   EFI_CERT_V2_X509_SHA384;
+   #pragma pack()
+
+
+**Members**
+
+ToBeSignedHash
+  The SHA384 hash of an X.509 certificate's To-Be-Signed contents.
+
+This identifies a signature containing the SHA384 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 48 bytes for an *EFI_CERT_V2_X509_SHA384* structure, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_X509_SHA384_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
+
 
 .. code-block::
 
@@ -1104,7 +1221,34 @@ TimeOfRevocation
   The time that the certificate shall be considered to be revoked.
 
 
-This identifies a signature containing the SHA512 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 80 bytes for an *EFI_CERT_X509_SHA512* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SHA512 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 80 bytes for an *EFI_CERT_X509_SHA512* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.  If support for EFI_CERT_V2_X509_SHA512_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_X509_SHA512_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_X509_SHA512_GUID \
+     { 0x4d46147a1, 0xfa79, 0x43a9, \
+     { 0x88, 0x36, 0x00, 0x34, 0x1c, 0x70, 0x8a, 0x70 } }
+
+
+**Prototype**
+
+.. code-block::
+
+   #pragma pack(1)
+   typedef struct _EFI_CERT_V2_X509_SHA512 {
+     EFI_SHA512_HASH             ToBeSignedHash;
+   }   EFI_CERT_V2_X509_SHA512;
+   #pragma pack()
+
+
+**Members**
+
+ToBeSignedHash
+  The SHA512 hash of an X.509 certificate's To-Be-Signed contents.
+
+
+This identifies a signature containing the SHA512 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0.  The *SignatureSize* shall always be 64 bytes for an *EFI_CERT_V2_X509_SHA512* structure, and the Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_X509_SHA512_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
 
 
 .. code-block::
@@ -1115,6 +1259,18 @@ This identifies a signature containing the SHA512 hash of an X.509 certificate's
 
 This identifies a signature containing a SM3 hash. The SignatureHeader size shall always be 0.
 The SignatureSize shall always be 16 (size of SignatureOwner component) + 32 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_SM3_GUID \
+     { 0xee4df27a, 0xdeca, 0x4312, \
+     { 0xa3, 0xae, 0x65, 0xf8, 0xa1, 0xd8, 0xf9, 0x92 } }
+
+
+This identifies a signature containing a SM3 hash. The SignatureHeader size shall always be 0.
+The SignatureSize shall always be 32 bytes.  The Signature data shall use the EFI_SIGNATURE_V2_DATA structure.
+
 
 .. code-block::
 
@@ -1142,7 +1298,32 @@ ToBeSignedHash
 TimeOfRevocation
    The time that the certificate shall be considered to be revoked.
 
-This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 16 (size of the SignatureOwner component) + 48 bytes for an EFI_CERT_X509_SM3 structure. The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the TimeOfRevocation is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 16 (size of the SignatureOwner component) + 48 bytes for an EFI_CERT_X509_SM3 structure. The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the TimeOfRevocation is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.  If support for EFI_CERT_V2_X509_SM3_GUID is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT), new entries should prefer the EFI_CERT_V2_X509_SM3_GUID format.
+
+
+.. code-block::
+
+   #define EFI_CERT_V2_X509_SM3_GUID \
+     { 0xa3a48dce, 0x8de4, 0x4634, \
+     { 0x91, 0x94, 0x95, 0xbf, 0x8d, 0x74, 0x42, 0xbc } }
+
+
+**Prototype**
+
+.. code-block::
+
+   #pragma pack(1)
+   typedef struct _EFI_CERT_V2_X509_SM3 {
+     EFI_SM3_HASH ToBeSignedHash;
+   } EFI_CERT_V2_X509_SM3;
+   #pragma pack()
+
+**Members**
+
+ToBeSignedHash
+   The SM3 hash of an X.509 certificate's To-Be-Signed contents.
+
+This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 32 bytes for an EFI_CERT_V2_X509_SM3 structure.  The Signature data shall use the EFI_SIGNATURE_V2_DATA structure.  This format should be preferred over EFI_CERT_X509_SM3_GUID if support is indicated in the EFI_CRYPTO_INDICATOR_TABLE (ECIT).
 
 
 .. code-block::

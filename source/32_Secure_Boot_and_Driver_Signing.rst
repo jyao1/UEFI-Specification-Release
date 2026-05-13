@@ -925,15 +925,6 @@ Each signature has an owner *SignatureOwner,* which is a GUID identifying the ag
 
 .. code-block::
 
-   #define EFI_CERT_SHA256_GUID \
-     { 0xc1c41626, 0x504c, 0x4092, \
-     { 0xac, 0xa9, 0x41, 0xf9, 0x36, 0x93, 0x43, 0x28 } }
-
-
-This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.
-
-.. code-block::
-
    #define EFI_CERT_RSA2048_GUID \
      { 0x3c5766e8, 0x269c, 0x4e34, \
      { 0xaa, 0x14, 0xed, 0x77, 0x6e, 0x85, 0xb3, 0xb6 } }
@@ -942,6 +933,15 @@ This identifies a signature containing a SHA-256 hash. The *SignatureHeader* siz
 This identifies a signature containing an RSA-2048 key. The key (only the modulus since the public key exponent is known to be 0x10001) shall be stored in big-endian order.
 
 The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
+
+.. code-block::
+
+   #define EFI_CERT_RSA2048_SHA1_GUID \
+     { 0x67f8444f, 0x8743, 0x48f1, \
+     { 0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80 } }
+
+
+This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
 
 
 .. code-block::
@@ -953,23 +953,6 @@ The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always b
 
 This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
 
-.. code-block::
-
-   #define EFI_CERT_SHA1_GUID \
-     { 0x826ca512, 0xcf10, 0x4ac9, \
-     { 0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd } }
-
-
-This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 20 bytes.
-
-.. code-block::
-
-   #define EFI_CERT_RSA2048_SHA1_GUID \
-     { 0x67f8444f, 0x8743, 0x48f1, \
-     { 0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80 } }
-
-
-This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
 
 .. code-block::
 
@@ -985,11 +968,33 @@ This identifies a signature based on a DER-encoded X.509 certificate. If the sig
 
 .. code-block::
 
+   #define EFI_CERT_SHA1_GUID \
+     { 0x826ca512, 0xcf10, 0x4ac9, \
+     { 0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd } }
+
+
+This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 20 bytes.
+
+
+.. code-block::
+
    #define EFI_CERT_SHA224_GUID \
      { 0xb6e5233, 0xa65c, 0x44c9, \
      { 0x94, 0x07, 0xd9, 0xab, 0x83, 0xbf, 0xc8, 0xbd } }
 
+
 This identifies a signature containing a SHA-224 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 28 bytes.
+
+
+.. code-block::
+
+   #define EFI_CERT_SHA256_GUID \
+     { 0xc1c41626, 0x504c, 0x4092, \
+     { 0xac, 0xa9, 0x41, 0xf9, 0x36, 0x93, 0x43, 0x28 } }
+
+
+This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.
+
 
 .. code-block::
 

@@ -930,7 +930,7 @@ Each signature has an owner *SignatureOwner,* which is a GUID identifying the ag
      { 0xaa, 0x14, 0xed, 0x77, 0x6e, 0x85, 0xb3, 0xb6 } }
 
 
-This identifies a signature containing an RSA-2048 key. The key (only the modulus since the public key exponent is known to be 0x10001) shall be stored in big-endian order.
+This identifies a signature containing an RSA-2048 key. The key (only the modulus since the public key exponent is known to be 0x10001) shall be stored in big-endian order.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
 
@@ -941,7 +941,7 @@ The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always b
      { 0xa3, 0x28, 0x1e, 0xaa, 0xb8, 0x73, 0x60, 0x80 } }
 
 
-This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
+This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -951,7 +951,7 @@ This identifies a signature containing a RSA-2048 signature of a SHA-1 hash. The
      { 0xad, 0x8d, 0xf2, 0xe7, 0xbb, 0xa3, 0x27, 0x84 } }
 
 
-This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.
+This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 256 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -961,7 +961,7 @@ This identifies a signature containing a RSA-2048 signature of a SHA-256 hash. T
      { 0x87, 0xb5, 0xab, 0x15, 0x5c, 0x2b, 0xf0, 0x72 } }
 
 
-This identifies a signature based on a DER-encoded X.509 certificate. If the signature is an X.509 certificate then verification of the signature of an image should validate the public key certificate in the image using certificate path verification, up to this X.509 certificate as a trusted root. If the signature is in a device signature variable, this signature is one root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* may vary but shall always be 16 (size of the *SignatureOwner* component) + the size of the certificate itself.
+This identifies a signature based on a DER-encoded X.509 certificate. If the signature is an X.509 certificate then verification of the signature of an image should validate the public key certificate in the image using certificate path verification, up to this X.509 certificate as a trusted root. If the signature is in a device signature variable, this signature is one root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* may vary but shall always be 16 (size of the *SignatureOwner* component) + the size of the certificate itself.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 **NOTE**: *This means that each certificate will normally be in a separate* EFI_SIGNATURE_LIST.
 
@@ -973,7 +973,7 @@ This identifies a signature based on a DER-encoded X.509 certificate. If the sig
      { 0xb1, 0x87, 0xbe, 0x01, 0x49, 0x66, 0x31, 0xbd } }
 
 
-This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 20 bytes.
+This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 20 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -983,7 +983,7 @@ This identifies a signature containing a SHA-1 hash. The *SignatureSize* shall a
      { 0x94, 0x07, 0xd9, 0xab, 0x83, 0xbf, 0xc8, 0xbd } }
 
 
-This identifies a signature containing a SHA-224 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 28 bytes.
+This identifies a signature containing a SHA-224 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 28 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -993,7 +993,7 @@ This identifies a signature containing a SHA-224 hash. The *SignatureHeader* siz
      { 0xac, 0xa9, 0x41, 0xf9, 0x36, 0x93, 0x43, 0x28 } }
 
 
-This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.
+This identifies a signature containing a SHA-256 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 32 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -1003,7 +1003,7 @@ This identifies a signature containing a SHA-256 hash. The *SignatureHeader* siz
      { 0x85, 0xf1, 0x8a, 0xd5, 0x6c, 0x70, 0x1e, 0x01 } }
 
 
-This identifies a signature containing a SHA-384 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 48 bytes.
+This identifies a signature containing a SHA-384 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 48 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -1013,7 +1013,7 @@ This identifies a signature containing a SHA-384 hash. The *SignatureHeader* siz
      { 0x9f, 0x1b, 0xd4, 0x1e, 0x2b, 0x89, 0xc1, 0x9a } }
 
 
-This identifies a signature containing a SHA-512 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 64 bytes.
+This identifies a signature containing a SHA-512 hash. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 64 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 
 .. code-block::
@@ -1044,7 +1044,7 @@ ToBeSignedHash
 TimeOfRevocation
   The time that the certificate shall be considered to be revoked. 
 
-  This identifies a signature containing the SHA256 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 48 bytes for an *EFI_CERT_X509_SHA256* structure. If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+  This identifies a signature containing the SHA256 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 48 bytes for an *EFI_CERT_X509_SHA256* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
 
 
 .. code-block::
@@ -1074,7 +1074,7 @@ ToBeSignedHash
 TimeOfRevocation
   The time that the certificate shall be considered to be revoked. 
 
-This identifies a signature containing the SHA384 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 64 bytes for an *EFI_CERT_X509_SHA384* structure. If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SHA384 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 64 bytes for an *EFI_CERT_X509_SHA384* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
 
 .. code-block::
 
@@ -1104,7 +1104,7 @@ TimeOfRevocation
   The time that the certificate shall be considered to be revoked.
 
 
-This identifies a signature containing the SHA512 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 80 bytes for an *EFI_CERT_X509_SHA512* structure. If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SHA512 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 80 bytes for an *EFI_CERT_X509_SHA512* structure.  The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
 
 
 .. code-block::
@@ -1113,8 +1113,8 @@ This identifies a signature containing the SHA512 hash of an X.509 certificate�
      { 0x57347f87, 0x7a9b, 0x403a, \
      { 0xb9, 0x3c, 0xdc, 0x4a, 0xfb, 0x7a, 0xe, 0xbc } }
 
-This identifies a signature containing a SM3 hash. The SignatureHeader size shall always be 0. 
-The SignatureSize shall always be 16 (size of SignatureOwner component) + 32 bytes.
+This identifies a signature containing a SM3 hash. The SignatureHeader size shall always be 0.
+The SignatureSize shall always be 16 (size of SignatureOwner component) + 32 bytes.  The Signature data shall use the EFI_SIGNATURE_DATA structure.
 
 .. code-block::
 
@@ -1142,7 +1142,7 @@ ToBeSignedHash
 TimeOfRevocation
    The time that the certificate shall be considered to be revoked.
 
-This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 16 (size of the SignatureOwner component) + 48 bytes for an EFI_CERT_X509_SM3 structure. If the TimeOfRevocation is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 16 (size of the SignatureOwner component) + 48 bytes for an EFI_CERT_X509_SM3 structure. The Signature data shall use the EFI_SIGNATURE_DATA structure.  If the TimeOfRevocation is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
 
 
 .. code-block::

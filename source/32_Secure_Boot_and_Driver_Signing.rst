@@ -705,15 +705,11 @@ While no Platform Key is enrolled, the SetupMode variable *shall* be equal to 1.
 
 After the Platform Key is enrolled, the SetupMode variable shall be equal to 0. While SetupMode == 0, the platform firmware *shall* require authentication in order to modify the Platform Key, Key Enrollment Key, OsRecoveryOrder, OsRecovery####, and image security databases. 
 
-While no Platform Key is enrolled, and while the variable AuditMode == 0, the platform is said to be operating in setup mode. 
+While no Platform Key is enrolled, the platform is said to be operating in setup mode. 
 
-After the Platform Key is enrolled, and while the variable AuditMode == 0, the platform is operating in user mode. The platform will continue to operate in user mode until the Platform Key is cleared, or the system is transitioned to either Audit or Deployed Modes. See "Clearing The Platform Key," "Transitioning to Audit Mode," and "Transitioning to Deployed Mode" for more information. 
+After the Platform Key is enrolled, the platform is operating in user mode. The platform will continue to operate in user mode until the Platform Key is cleared. See "Clearing The Platform Key" for more information. 
 
-Audit Mode enables programmatic discovery of signature list combinations that successfully authenticate installed EFI images without the risk of rendering a system unbootable. Chosen signature lists configurations can be tested to ensure the system will continue to boot after the system is transitioned out of Audit Mode. Details on how to transition to Audit Mode are detailed below in the section "Transitioning to Audit Mode." After transitioning to Audit Mode, signature enforcement is disabled such that all images are initialized and enhanced Image Execution Information Table (IEIT) logging is performed including recursive validation for multi-signed images. 
-
-Deployed Mode is the most secure mode. For details on transitioning to Deployed Mode see the section "Transitioning to Deployed Mode" below. By design, both User Mode and Audit Mode support unauthenticated transitions to Deployed Mode. However, to move from Deployed Mode to any other mode requires a secure platform-specific method, or deleting the PK, which is authenticated. 
-
-Secure Boot Mode transitions to User Mode or Deployed Mode shall take effect immediately. Mode transitions to Setup Mode or Audit Mode may either take effect immediately (recommended) or after a reset. For implementations that require a reset, the mode transition shall be processed prior to the initialization of the SecureBoot variable, and the SetVariable() workflow shall be as follows: 
+Secure Boot Mode transitions to User Mode *shall* take effect immediately. Mode transitions to Setup Mode may either take effect immediately (recommended) or after a reset. For implementations that require a reset, the mode transition *shall* be processed prior to the initialization of the SecureBoot variable, and the SetVariable() workflow *shall* be as follows: 
 
 #. If the variable has an authenticated attribute, it shall be authenticated as specified, and failure will result in immediate termination of this workflow by returning the appropriate error.
 
@@ -755,24 +751,6 @@ Clearing The Platform Key
 #########################
 
 The platform owner clears the public half of the Platform Key (PKpub) by deleting the Platform Key variable using UEFI Runtime Service *SetVariable()*. The data buffer submitted to the *SetVariable()* must be signed with the current PKpriv - see :ref:`variable-services` for details. The name and GUID of the Platform Key variable are specified in :ref:`globally-defined-variables`. The platform key may also be cleared using a secure platform-specific method. When the platform key is cleared, the global variable *SetupMode* must also be updated to 1.
-
-
-.. _transitioning-to-audit-mode:
-
-Transitioning to Audit Mode
-###########################
-
-To enter Audit Mode, a new UEFI variable AuditMode is set to 1. Entering Audit Mode has the side effect of changing SetupMode == 1, PK is cleared, and the new DeployedMode == 0.
-
-**NOTE**: *The AuditMode variable is only writable before* ExitBootServices() *is called when the system is* **not** *in Deployed Mode*. See :ref:`secure-boot-modes`  *for more details.*
-
-
-.. _transitioning-to-deployed-mode:
-
-Transitioning to Deployed Mode
-##############################
-
-To enter Deployed Mode from Audit Mode, set the variable PK. To enter Deployed Mode from User Mode, set the variable DeployedMode to 1. This transition takes effect immediately with no reset required. Entering Deployed Mode has the side effect of changing SetupMode == 0, AuditMode == 0 and is made read-only, and DeployedMode == 1 and is made read-only. See :ref:`secure-boot-modes`  for more details.
 
 
 .. _enrolling-key-exchange-keys:
@@ -1162,13 +1140,7 @@ Image Execution Information Table
 
 **Summary**
 
-When *AuditMode==0,* if the image’s signature is not found in the authorized database, or is found in the forbidden database, the image will not be started and instead, information about it will be placed in the EFI_IMAGE_EXECUTION_INFO_TABLE (see :ref:`image-execution-information-table`).
-
-When *AuditMode==1,* *an* *EFI_IMAGE_EXECUTION_INFO* *element is created in the* *EFI_IMAGE_EXECUTION_INFO_TABLE* *for every certificate found in the certificate table of every image that is validated.* 
-
-Additionally for every image, an element will be created in the table for every EFI_CERT_SHAXXX that is supported by the platform. The contents of* *Action* *for each element are determined by comparing that specific element’s* *Signature* *(which will contain exactly 1* *EFI_SIGNATURE_DATA* *) to the currently-configured image security databases and policies, and shall be either* *EFI_IMAGE_EXECUTION_AUTH_SIG_PASSED*, *EFI_IMAGE_EXECUTION_AUTH_SIG_FAILED*, *EFI_IMAGE_EXECUTION_AUTH_SIG_NOT_FOUND*, *EFI_IMAGE_EXECUTION_AUTH_SIG_FOUND*, or *EFI_IMAGE_EXECUTION_POLICY_FAILED*. 
-
-Finally, because the system is in Audit Mode, all modules are initialized even if they fail to authenticate, and the *EFI_IMAGE_EXECUTION_INITIALIZED* bit shall be set in *Action* for all elements.
+If the image’s signature is not found in the authorized database, or is found in the forbidden database, the image will not be started and instead, information about it will be placed in the EFI_IMAGE_EXECUTION_INFO_TABLE (see :ref:`image-execution-information-table`).
 
 
 **Prototype**
@@ -1238,7 +1210,7 @@ InformationInfo
 
 **Description**
 
-This structure describes an image in the EFI System Configuration Table. It is only required in the case where image signatures are being checked and the image was not initialized because its signature failed, when AuditMode==1, or was not found in the signature database *and* an authorized user or the owner would not authorize its execution. It may be used in other cases as well. 
+This structure describes an image in the EFI System Configuration Table. It is only required in the case where image signatures are being checked and the image was not initialized because its signature failed, or was not found in the signature database *and* an authorized user or the owner would not authorize its execution. It may be used in other cases as well. 
 
 In these cases, the information about the image is copied into the EFI System Configuration Table. Information about other images which were successfully initialized may also be included as well, but this is not required. 
 
@@ -1277,7 +1249,7 @@ First, this field describes the results of the firmware’s attempt to authentic
 
 Second, this field describes whether the image was initialized or not. 
 
-This table can be used by an agent which executes later to audit which images were not loaded and perhaps query other sources to discover whether the image should be authorized. If so, the agent can use the method described in "Signature Database Update" to update the Signature Database with the image’s signature. Switching the system into Audit Mode generates a more verbose table which provides additional insights to this agent. 
+This table can be used by an agent which executes later to audit which images were not loaded and perhaps query other sources to discover whether the image should be authorized. If so, the agent can use the method described in "Signature Database Update" to update the Signature Database with the image’s signature. 
 
 If an attempt to boot a legacy non-UEFI OS takes place when the system is in User Mode, the OS load shall fail and a corresponding *EFI_IMAGE_EXECUTION_INFO* entry shall be created with Action set to *EFI_IMAGE_EXECUTION_AUTH_UNTESTED,* Name set to the NULL-terminated "Description String" from the BIOS Boot Specification Device Path and DevicePath set to the BIOS Boot Specification Device Path ( :ref:`bios-boot-specification-device-path` ). 
 

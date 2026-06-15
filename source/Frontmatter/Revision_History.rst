@@ -24,6 +24,7 @@ Many people have contributed to the contents of this specification, including th
    :widths: 10 60 30
 
    **Revision** | **Issue # - Description** | **Modified/Added Content**
+  2.11 | XXXX - Remove Audit Mode language | Modified :numref:`globally-defined-variables`, :numref:`secure-boot-modes`, :numref:`image-execution-information-table`
    2.11 | 2365 - New Memory Attribute for hot plug | :numref:`efi-boot-services-getmemorymap`
    2.11 | 2371 - Correct the description of EFI_KMS_PROTOCOL.DeleteKey(), KeyDescriptors | :numref:`efi-key-management-service-protocol`, :numref:`efi-kms-protocol-deletekey`
    2.11 | 2384 - Mandate the UEFI Arm implementation to allocate pages from the 48-bit address range first | :numref:`aarch64-platforms`

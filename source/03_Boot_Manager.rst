@@ -492,9 +492,6 @@ To prevent name collisions with possible future globally defined variables, othe
    * - **Variable Name**
      - **Attribute**
      - **Description**
-   * - AuditMode
-     - BS, RT
-     - Whether the system is operating in Audit Mode (1) or not (0). All other values are reserved. Should be treated as read-only except when DeployedMode is 0. Always becomes read-only after ExitBootServices() is called.
    * - Boot####
      - NV, BS, RT
      - A boot load option. #### is a printed hex value. No 0x or h is included in the hex value.
@@ -534,9 +531,6 @@ To prevent name collisions with possible future globally defined variables, othe
    * - dbxDefault
      - BS, RT
      - The OEM's default secure boot blacklist signature store. Should be treated as read-only.
-   * - DeployedMode
-     - BS, RT
-     - Whether the system is operating in Deployed Mode (1) or not (0). All other values are reserved. Should be treated as read-only when its value is 1. Always becomes read-only after ExitBootServices() is called.
    * - devAuthBoot
      - BS, RT
      - Whether the platform firmware is operating in device authentication boot mode (1) or not (0). All other values are reserved. Should be treated as read-only.
@@ -599,7 +593,7 @@ To prevent name collisions with possible future globally defined variables, othe
      - Whether the platform firmware is operating in Secure boot mode (1) or not (0). All other values are reserved. Should be treated as read-only.
    * - SetupMode
      - BS, RT
-     - Whether the system should require authentication on SetVariable() requests to Secure Boot policy variables (0) or not (1). Should be treated as read-only.  The system is in "Setup Mode" when SetupMode==1, AuditMode==0, and DeployedMode==0.
+     - Whether the system should require authentication on SetVariable() requests to Secure Boot policy variables (0) or not (1). Should be treated as read-only. The system is in "Setup Mode" when SetupMode==1.
    * - SysPrep####
      - NV, BS, RT
      - A System Prep application load option containing an *EFI_LOAD_OPTION* descriptor. #### is a printed hex value.
@@ -655,10 +649,6 @@ The *SetupMode* variable is an 8-bit unsigned integer that defines whether the s
 
 Secure Boot Policy Variables must be created using the *EFI_VARIABLE_AUTHENTICATION_2* structure.
 
-The *AuditMode* variable is an 8-bit unsigned integer that defines whether the system is currently operating in Audit Mode.
-
-The *DeployedMode* variable is an 8-bit unsigned integer that defines whether the system is currently operating in Deployed Mode.
-
 The *KEK* variable contains the current Key Exchange Key database.
 
 The *PK* variable contains the current Platform Key.
@@ -679,7 +669,7 @@ The *dbxDefault* variable, if present, contains the platform-defined secure boot
 
 The *SignatureSupport* variable returns an array of GUIDs, with each GUID representing a type of signature which the platform firmware supports for images and other data. The different signature types are described in "Signature Database".
 
-The *SecureBoot* variable is an 8-bit unsigned integer that defines whether the platform firmware is operating with Secure Boot enabled. A value of 1 indicates that platform firmware performs driver and boot application signature verification as specified in  :ref:`uefi-image-validation`  during the current boot. A value of 0 indicates that driver and boot application signature verification is not active during the current boot. The SecureBoot variable is initialized prior to Secure Boot image authentication and thereafter should be treated as read-only and immutable. Its initialization value is determined by platform policy but must be 0 if the platform is in Setup Mode or Audit Mode during its initialization.
+The *SecureBoot* variable is an 8-bit unsigned integer that defines whether the platform firmware is operating with Secure Boot enabled. A value of 1 indicates that platform firmware performs driver and boot application signature verification as specified in  :ref:`uefi-image-validation`  during the current boot. A value of 0 indicates that driver and boot application signature verification is not active during the current boot. The SecureBoot variable is initialized prior to Secure Boot image authentication and thereafter should be treated as read-only and immutable. Its initialization value is determined by platform policy but must be 0 if the platform is in Setup Mode during its initialization.
 
 The *OsIndicationsSupported* variable indicates which of the OS indication features and actions that the firmware supports. This variable is recreated by firmware every boot, and cannot be modified by the OS (see *SetVariable()* Attributes usage rules once *ExitBootServices()* is performed).
 

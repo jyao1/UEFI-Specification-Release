@@ -2097,7 +2097,7 @@ Cryptographic Algorithm Requirement
 
 1. UEFI variable authentication
 
-   - For EFI_VARIABLE_AUTHENTICATION_3 or EFI_VARIABLE_AUTHENTICATION_2 descriptor, SignedData.digestAlgorithms shall support SHA-256 (oid: 2.16.840.1.101.3.4.2.1), SignerInfo.digestEncryptionAlgorithm be support digest encryption algorithm of RSA with PKCS #1 v1.5 padding (RSASSA_PKCS1v1_5) (oid: sha256WithRSAEncryption: 1.2.840.113549.1.1.11).
+   - For EFI_VARIABLE_AUTHENTICATION_2 descriptor, SignedData.digestAlgorithms shall support SHA-256 (oid: 2.16.840.1.101.3.4.2.1), SignerInfo.digestEncryptionAlgorithm be support digest encryption algorithm of RSA with PKCS #1 v1.5 padding (RSASSA_PKCS1v1_5) (oid: sha256WithRSAEncryption: 1.2.840.113549.1.1.11).
 
 2. EAP protocol
 

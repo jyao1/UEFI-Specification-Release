@@ -8482,7 +8482,7 @@ EfiTlsConfigDataTypeHostPrivateKey
   Local host configuration data: private key data.
 
 EfiTlsConfigDataTypeCACertificate
-  CA certificate to verify peer. This data should be PEM-encoded RSA or PKCS#8 private key.
+  CA certificate to verify peer. This data should be DER-encoded binary X.509 certificate or PEM-encoded X.509 certificate.
 
 EfiTlsConfigDataTypeCertRevocationList
   CA-supplied Certificate Revocation List data. This data should be DER-encoded CRL data.

@@ -2089,32 +2089,3 @@ By way of examples, at the time of writing the UEFI Forum is aware of a number o
 
 Other extension documents may exist outside the view of the UEFI Forum or may have been created since the last revision of this document.
 
-
-.. _cryptographic-algorithm-requirement:
-
-Cryptographic Algorithm Requirement
-####################################
-
-1. UEFI variable authentication
-
-   - For EFI_VARIABLE_AUTHENTICATION_3 or EFI_VARIABLE_AUTHENTICATION_2 descriptor, SignedData.digestAlgorithms shall support SHA-256 (oid: 2.16.840.1.101.3.4.2.1), SignerInfo.digestEncryptionAlgorithm be support digest encryption algorithm of RSA with PKCS #1 v1.5 padding (RSASSA_PKCS1v1_5) (oid: sha256WithRSAEncryption: 1.2.840.113549.1.1.11).
-
-2. EAP protocol
-
-   - The cryptographic strength of EFI_EAP_TYPE_TLS shall be at least of hash strength SHA-256 and RSA key length of at least 2048 bits.
-
-3. TLS protocol
-
-   - The recommended TLS version is 1.2 or 1.3.
-
-4. Secure Boot
-
-   - The platform key (PK) format shall be at least RSA-2048. The hash of the UEFI image binary in the dbx shall be at least SHA-256.
-
-5. Hash Protocol and Hash2 Protocol
-
-   - SHA-1 and MD5 shall only be used for backwards compatibility. For example, SHA-1 shall only be used to support TPM1.2. MD5 shall only be used for iSCSI CHAP.
-
-6. PKCS7 Verify Protocol.
-
-   - Digest (Hash) Algorithm shall support SHA-256 (oid: 2.16.840.1.101.3.4.2.1). Digest Encryption shall support sha256WithRSAEncryption (oid: 1.2.840.113549.1.1.11).

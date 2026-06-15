@@ -1453,6 +1453,8 @@ Then, based on this match or its own policy, the firmware can decide whether or 
 
 #. End.
 
+.. note:: **DEPRECATED: EFI_CERT_X509_GUID for DBX** - The use of the EFI_CERT_X509_GUID signature type for *dbx* is deprecated and should no longer be used. This feature will be removed from future versions of the specification. It is recommended to use To-Be-Signed hash entries (EFI_CERT_X509_SHA256, EFI_CERT_X509_SHA384, or EFI_CERT_X509_SHA512) in *dbx* instead of using the EFI_CERT_X509_GUID signature type.
+
 
 .. _device-authentication:
 

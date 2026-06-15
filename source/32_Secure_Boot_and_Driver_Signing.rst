@@ -1037,9 +1037,14 @@ ToBeSignedHash
   The SHA256 hash of an X.509 certificate’s To-Be-Signed contents.
 
 TimeOfRevocation
-  The time that the certificate shall be considered to be revoked. 
+  The time that the certificate shall be considered to be revoked. See Note below.
 
-  This identifies a signature containing the SHA256 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 48 bytes for an *EFI_CERT_X509_SHA256* structure. If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+  This identifies a signature containing the SHA256 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA256 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 48 bytes for an *EFI_CERT_X509_SHA256* structure.
+  The TimeOfRevocation field is handled uniquely depending on usage.
+  * For revocation usage:
+    * is non-zero: the certificate should be considered to be revoked from that time and onwards.
+    * zero: the certificate shall be considered to always be revoked.
+  * For authorization usage, it must be zero and has no meaning.
 
 
 .. code-block::
@@ -1067,9 +1072,14 @@ ToBeSignedHash
   The SHA384 hash of an X.509 certificate’s To-Be-Signed contents.
 
 TimeOfRevocation
-  The time that the certificate shall be considered to be revoked. 
+  The time that the certificate shall be considered to be revoked. See Note below.
 
-This identifies a signature containing the SHA384 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 64 bytes for an *EFI_CERT_X509_SHA384* structure. If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SHA384 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA384 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 64 bytes for an *EFI_CERT_X509_SHA384* structure.
+The TimeOfRevocation field is handled uniquely depending on usage.
+ * For revocation usage:
+   * is non-zero: the certificate should be considered to be revoked from that time and onwards.
+   * zero: the certificate shall be considered to always be revoked.
+ * For authorization usage, it must be zero and has no meaning.
 
 .. code-block::
 
@@ -1096,10 +1106,14 @@ ToBeSignedHash
   The SHA512 hash of an X.509 certificate’s To-Be-Signed contents.
 
 TimeOfRevocation
-  The time that the certificate shall be considered to be revoked.
+  The time that the certificate shall be considered to be revoked. See Note below.
 
-
-This identifies a signature containing the SHA512 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 80 bytes for an *EFI_CERT_X509_SHA512* structure. If the *TimeOfRevocation* is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SHA512 hash of an X.509 certificate’s To-Be-Signed contents, and a time of revocation. If the signature is in a device signature variable, this signature is a SHA512 hash of a root certificate authority (CA) certificate or an intermediate certificate for the device. The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of the *SignatureOwner* component) + 80 bytes for an *EFI_CERT_X509_SHA512* structure.
+The TimeOfRevocation field is handled uniquely depending on usage.
+ * For revocation usage:
+   * is non-zero: the certificate should be considered to be revoked from that time and onwards.
+   * zero: the certificate shall be considered to always be revoked.
+ * For authorization usage, it must be zero and has no meaning.
 
 
 .. code-block::
@@ -1135,9 +1149,14 @@ ToBeSignedHash
    The SM3 hash of an X.509 certificate’s To-Be-Signed contents.
 
 TimeOfRevocation
-   The time that the certificate shall be considered to be revoked.
+   The time that the certificate shall be considered to be revoked. See Note below.
 
-This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 16 (size of the SignatureOwner component) + 32 bytes for an EFI_CERT_X509_SM3 structure. If the TimeOfRevocation is non-zero, the certificate should be considered to be revoked from that time and onwards, and otherwise the certificate shall be considered to always be revoked.
+This identifies a signature containing the SM3 hash of an X.509 certificate's To-Be-Signed contents, and a time of revocation. The SignatureHeader size shall always be 0. The SignatureSize shall always be 16 (size of the SignatureOwner component) + 32 bytes for an EFI_CERT_X509_SM3 structure.
+The TimeOfRevocation field is handled uniquely depending on usage.
+ * For revocation usage:
+   * is non-zero: the certificate should be considered to be revoked from that time and onwards.
+   * zero: the certificate shall be considered to always be revoked.
+ * For authorization usage, it must be zero and has no meaning.
 
 
 .. code-block::
@@ -1424,7 +1443,15 @@ This section describes the process by which an unknown UEFI image might be autho
 
 #. UEFI Image Validation Succeeded? During initialization of an UEFI image, the UEFI Boot Manager decides whether or not the UEFI image should be initialized. By comparing the calculated UEFI image signature against that in one of the signature databases, the firmware can determine if there is a match. 
 
-The security database *db* must either contain an entry with a hash value of the image (with a supported hash type), or it must contain an entry with a certificate against which an entry in the image’s certificate table can be verified. In either case verification must not succeed if the security database dbx contains any record with:  
+The security database *db* must contain at least one of the following entries for the UEFI image to be approved:
+
+– A. an entry with a hash value of the image (with a supported hash type).
+
+- B. an entry with a certificate To-Be-Signed hash against which an entry in the image's certificate table can be verified.
+
+- C. an entry with a certificate against which an entry in the image's certificate table can be verified.
+
+In either case verification must not succeed if the security database dbx contains any record with:  
 
 – A. Any entry with *SignatureListType* of *EFI_CERT_SHA256_GUID* with any 
 *SignatureData* containing the SHA-256 hash of the binary.

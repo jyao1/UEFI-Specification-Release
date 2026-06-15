@@ -748,6 +748,7 @@ The name and GUID of the Platform Key variable are specified in :ref:`globally-d
 
 The platform vendor may provide a default PKpub in the PKDefault variable described in  :ref:`globally-defined-variables`. This variable is formatted identically to the Platform Key variable. If present, this key may optionally be used as the public half of the Platform Key when transitioning from setup mode to user mode. If so, it may be read, placed within an *EFI_VARIABLE_AUTHENTICATION2* structure and copied to the Platform Key variable using the *SetVariable()* call.
 
+If the new Platform Key contains an unsupported algorithm or key size, the *SetVariable()* call shall return *EFI_UNSUPPORTED* and the new Platform Key shall not be enrolled.
 
 .. _clearing-the-platform-key:
 
@@ -793,6 +794,7 @@ The authenticated UEFI variable that stores the key exchange keys (KEKs) can alw
 
 The name and GUID of the Key Exchange Key variable are specified in :ref:`globally-defined-variables`, "Globally Defined Variables." The platform vendor may provide a default set of Key Exchange Keys in the KEKDefault variable described in :ref:`globally-defined-variables`. If present, these keys (or a subset) may optionally be used when performing the initial enrollment of Key Exchange Keys. If any are to be used, they may be parsed from the variable and enrolled as described above.
 
+If the new Key Exchange Key contains an unsupported algorithm or key size, the *SetVariable()* call shall return *EFI_UNSUPPORTED* and the new Key Exchange Key shall not be enrolled.
 
 .. _platform-firmware-key-storage-requirements:
 
@@ -1340,6 +1342,8 @@ These authenticated UEFI variables that store the signature databases (db, dbx, 
 The signature databases are in the form of Signature Databases, as described in "Signature Database" above. 
 
 The platform vendor may provide a default set of entries for the Signature Database in the dbDefault, dbxDefault, dbtDefault, and dbrDefault variables described in :ref:`globally-defined-variables`. If present, these keys (or a subset) may optionally be used when performing the initial enrollment of signature database entries. If any are to be used, they may be parsed from the variable and enrolled as described below. 
+
+If the new signature database entry contains an unsupported algorithm or key size, the *SetVariable()* call shall return *EFI_UNSUPPORTED* and the signature database shall not be updated.
 
 If, when adding a signature to the signature database, *SetVariable()* returns *EFI_OUT_OF_RESOURCES,* indicating there is no more room, the updater may discard the new signature or it may decide to discard one of the database entries. These authenticated UEFI variables that store the signature databases (db, or dbx, dbt, or dbr) can always be read but can only be written if: 
 

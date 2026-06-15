@@ -1426,12 +1426,11 @@ This section describes the process by which an unknown UEFI image might be autho
 
 The security database *db* must either contain an entry with a hash value of the image (with a supported hash type), or it must contain an entry with a certificate against which an entry in the image’s certificate table can be verified. In either case verification must not succeed if the security database dbx contains any record with:  
 
-– A. Any entry with *SignatureListType* of *EFI_CERT_SHA256_GUID* with any 
-*SignatureData* containing the SHA-256 hash of the binary.
+– A. Any entry with *SignatureListType* of a hash GUID (such as *EFI_CERT_SHA256_GUID*. see :ref:`signature-database`) with any *SignatureData* containing the hash of the binary.
 
-– B. Any entry with *SignatureListType* of *EFI_CERT_X509_SHA256,* *EFI_CERT_X509_SHA384,* or *EFI_CERT_X509_SHA512,* with any SignatureData which reflects the To-Be-Signed hash included in any certificate in the signing chain of the signature being verified. 
+– B. Any entry with *SignatureListType* of an X509 hash GUID (such as *EFI_CERT_X509_SHA256_GUID*. see :ref:`signature-database`) with any *SignatureData* which reflects the To-Be-Signed hash included in any certificate in the signing chain of the signature being verified. 
 
-– C. Any entry with *SignatureListType* of *EFI_CERT_X509_GUID,* with *SignatureData* which contains a certificate with the same Issuer, Serial Number, and To-Be-Signed hash included in any certificate in the signing chain of the signature being verified.
+– C. Any entry with *SignatureListType* of *EFI_CERT_X509_GUID* with *SignatureData* which contains a certificate with the same Issuer, Serial Number, and To-Be-Signed hash included in any certificate in the signing chain of the signature being verified.
 
 Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). Only one hash or signature is required to be present in *db* in order to pass validation, so long as neither the hash of the binary nor any present signature is reflected in dbx.
 

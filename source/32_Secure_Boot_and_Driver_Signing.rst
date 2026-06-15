@@ -793,6 +793,7 @@ The authenticated UEFI variable that stores the key exchange keys (KEKs) can alw
 
 The name and GUID of the Key Exchange Key variable are specified in :ref:`globally-defined-variables`, "Globally Defined Variables." The platform vendor may provide a default set of Key Exchange Keys in the KEKDefault variable described in :ref:`globally-defined-variables`. If present, these keys (or a subset) may optionally be used when performing the initial enrollment of Key Exchange Keys. If any are to be used, they may be parsed from the variable and enrolled as described above.
 
+Each *SetVariable()* call to update the Key Exchange Key database should provide signature list entries containing only one *EFI_SIGNATURE_LIST*. If the update contains more than one *EFI_SIGNATURE_LIST*, the *SetVariable()* call may return *EFI_UNSUPPORTED* and the Key Exchange Key database shall remain unchanged. The caller may issue multiple *SetVariable()* calls to append entries with different *EFI_SIGNATURE_LIST* values, so the resulting Key Exchange Key database may contain multiple *EFI_SIGNATURE_LIST* entries.
 
 .. _platform-firmware-key-storage-requirements:
 
@@ -1340,6 +1341,8 @@ These authenticated UEFI variables that store the signature databases (db, dbx, 
 The signature databases are in the form of Signature Databases, as described in "Signature Database" above. 
 
 The platform vendor may provide a default set of entries for the Signature Database in the dbDefault, dbxDefault, dbtDefault, and dbrDefault variables described in :ref:`globally-defined-variables`. If present, these keys (or a subset) may optionally be used when performing the initial enrollment of signature database entries. If any are to be used, they may be parsed from the variable and enrolled as described below. 
+
+Each *SetVariable()* call to update the signature database should provide signature list entries containing only one *EFI_SIGNATURE_LIST*. If the update contains more than one *EFI_SIGNATURE_LIST*, the *SetVariable()* call may return *EFI_UNSUPPORTED* and the signature database shall remain unchanged. The caller may issue multiple *SetVariable()* calls to append entries with different *EFI_SIGNATURE_LIST* values, so the resulting signature database may contain multiple *EFI_SIGNATURE_LIST* entries.
 
 If, when adding a signature to the signature database, *SetVariable()* returns *EFI_OUT_OF_RESOURCES,* indicating there is no more room, the updater may discard the new signature or it may decide to discard one of the database entries. These authenticated UEFI variables that store the signature databases (db, or dbx, dbt, or dbr) can always be read but can only be written if: 
 

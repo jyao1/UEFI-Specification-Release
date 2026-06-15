@@ -231,11 +231,7 @@ Data
    Reserved                                                    0x00000010   
    #define EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS  0x00000020  
    #define EFI_VARIABLE_APPEND_WRITE                           0x00000040  
-   #define EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS          0x00000080  
-   //This attribute indicates that the variable payload begins  
-   //with an EFI_VARIABLE_AUTHENTICATION_3 structure, and  
-   //potentially more structures as indicated by fields of this  
-   //structure. See definition below and in SetVariable().
+   Reserved                                                    0x00000080  
 
 
 **Description**
@@ -245,49 +241,6 @@ Each vendor may create and manage its own variables without the risk of name con
 If the *Data* buffer is too small to hold the contents of the variable, the error *EFI_BUFFER_TOO_SMALL* is returned and DataSize is set to the required buffer size to obtain the data.
 
 The EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS may be set in the returned *Attributes* bitmask parameter of a GetVariable() call. The EFI_VARIABLE_APPEND_WRITE attribute will never be set in the returned *Attributes* bitmask parameter. 
-
-Variables stored with the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS attribute set will return metadata in addition to variable data when GetVariable() is called. If a GetVariable() call indicates that this attribute is set, the GetVariable() payload must be interpreted according to the metadata headers. In addition to the headers described in SetVariable(), the following header is used to indicate what certificate may be currently associated with a variable.
-
-.. code-block::  
-
-   //
-   // EFI_VARIABLE_AUTHENTICATION_3_CERT_ID descriptor
-   //
-   // An extensible structure to identify a unique x509 cert
-   // associated with a given variable
-   //
-   #define EFI_VARIABLE_AUTHENTICATION_3_CERT_ID_SHA256 1
-   
-   typedef struct {
-      UINT8          Type;
-      UINT32         IdSize;
-      // UINT8       Id[IdSize];
-   }   EFI_VARIABLE_AUTHENTICATION_3_CERT_ID;
-
-
-Type
-  Identifies the type of ID that is returned and how the ID should be interpreted.
-
-IdSize
-  Indicates the size of the Id buffer that follows this field in the structure.
-
-Id (Not a formal structure member)
-  This is a unique identifier for the associated certificate as defined by the Type field. For CERT_ID_SHA256, the buffer will be a SHA-256 digest of the tbsCertificate (To Be Signed Certificate data defined in x509) data for the cert.
-
-When the attribute EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS is set, the Data buffer shall be interpreted as follows:
-
-// NOTE: "||" indicates concatenation.
-
-// Example: EFI_VARIABLE_AUTHENTICATION_3_TIMESTAMP_TYPE
-
-EFI_VARIABLE_AUTHENTICATION_3 || EFI_TIME || EFI_VARIABLE_AUTHENTICATION_3_CERT_ID || Data
-
-// Example: *EFI_VARIABLE_AUTHENTICATION_3_NONCE_TYPE*
-
-EFI_VARIABLE_AUTHENTICATION_3 || EFI_VARIABLE_AUTHENTICATION_3_NONCE ||
-EFI_VARIABLE_AUTHENTICATION_3_CERT_ID || Data
-
-**NOTE**: *The MetadataSize field of the EFI_VARIABLE_AUTHENTICATION_3 structure in each of these examples does not include any WIN_CERTIFICATE_UEFI_GUID structures. These structures are used in the SetVariable() interface, not GetVariable(), as described in the above examples*.
 
 **Status Codes Returned**
 
@@ -426,7 +379,7 @@ Attributes
   Attributes bitmask to set for the variable. Refer to the :ref:`getvariable` function description.
 
 DataSize 
-  The size in bytes of the *Data* buffer. Unless the EFI_VARIABLE_APPEND_WRITE, EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS, EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS, or EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute is set, a size of zero causes the variable to be deleted. When the EFI_VARIABLE_APPEND_WRITE attribute is set, then a SetVariable() call with a *DataSize* of zero will not cause any change to the variable value (the timestamp associated with the variable may be updated however, even if no new data value is provided; see the description of the EFI_VARIABLE_AUTHENTICATION_2 descriptor below). In this case the DataSize will not be zero since the EFI_VARIABLE_AUTHENTICATION_2 descriptor will be populated).
+  The size in bytes of the *Data* buffer. Unless the EFI_VARIABLE_APPEND_WRITE, EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS, or EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute is set, a size of zero causes the variable to be deleted. When the EFI_VARIABLE_APPEND_WRITE attribute is set, then a SetVariable() call with a *DataSize* of zero will not cause any change to the variable value (the timestamp associated with the variable may be updated however, even if no new data value is provided; see the description of the EFI_VARIABLE_AUTHENTICATION_2 descriptor below). In this case the DataSize will not be zero since the EFI_VARIABLE_AUTHENTICATION_2 descriptor will be populated).
 
 Data 
   The contents for the variable.
@@ -453,62 +406,6 @@ AuthInfo
   Provides the authorization for the variable access. Only a *CertType* of EFI_CERT_TYPE_PKCS7_GUID is accepted.
 
 
-.. code-block::
-
-   //
-   // EFI_VARIABLE_AUTHENTICATION_3 descriptor
-   //
-   // An extensible implementation of the Variable Authentication
-   // structure.
-   //
-   #define EFI_VARIABLE_AUTHENTICATION_3_TIMESTAMP_TYPE 1
-   #define EFI_VARIABLE_AUTHENTICATION_3_NONCE_TYPE 2
-
-   typedef struct {
-     UINT8 Version;
-     UINT8 Type;
-     UINT32 MetadataSize;
-     UINT32 Flags;
-   } EFI_VARIABLE_AUTHENTICATION_3;
-
-Version
-  This field is used in case the EFI_VARIABLE_AUTHENTICATION_3 structure itself ever requires updating. For now, it is hardcoded to "0x1".
-
-Type
-  Declares what structure immediately follows this structure in the Variable Data payload. For EFI_VARIABLE_AUTHENTICATION_3_TIMESTAMP_TYPE, it will be an instance of EFI_TIME (for the TimeStamp). For EFI_VARIABLE_AUTHENTICATION_3_NONCE_TYPE the structure will be an instance of EFI_VARIABLE_AUTHENTICATION_3_NONCE. This structure is defined below. Note that none of these structures contains a WIN_CERTIFICATE_UEFI_GUID structure. See   :ref:`using-the-efi-variable-authentication-3-descriptor` for an explanation of structure sequencing.
-
-MetadataSize
-  Declares the size of all variable authentication metadata (data related to the authentication of the variable that is not variable data itself), including this header structure, and type-specific structures (eg. EFI_VARIABLE_AUTHENTICATION_3_NONCE), and any WIN_CERTIFICATE_UEFI_GUID structures.
-
-Flags
-  | Bitfield indicating any optional configuration for this call. Currently, the only defined value is: #define EFI_VARIABLE_ENHANCED_AUTH_FLAG_UPDATE_CERT 0x00000001 The presence of this flag on SetVariable() indicates that there are two instances of the WIN_CERTIFICATE_UEFI_GUID structure following the type-specific structures. The first instance describes the new cert to be set as the authority for the variable. The second is the signed data to authorize the current updated.  
-
-  | **NOTE:** All other bits are currently Reserved on SetVariable().
-
-  | **NOTE**: All flags are reserved on GetVariable().
-  |
-
-.. code-block::
-
-   //
-   // EFI_VARIABLE_AUTHENTICATION_3_NONCE descriptor
-   //
-   // A nonce-based authentication method descriptor template. This
-   // structure will always be followed by a
-   // WIN_CERTIFICATE_UEFI_GUID structure.
-   //
-   typedef struct {
-     UINT32 NonceSize;
-     // UINT8 Nonce[NonceSize];
-   }  EFI_VARIABLE_AUTHENTICATION_3_NONCE;
-
-NonceSize
-  Indicates the size of the Nonce buffer that follows this field in the structure. Must not be 0.
-
-Nonce (Not a formal structure member)
-  Unique, random value that guarantees a signed payload cannot be shared between multiple machines or machine families. On SetVariable(), if the Nonce field is all 0’s, the host machine will try to use an internally generated random number. Will return *EFI_UNSUPPORTED* if not possible. Also, on SetVariable() if the variable already exists and the nonce is identical to the current nonce, will return EFI_INVALID_PARAMETER.
-
-
 **Description**
 
 Variables are stored by the firmware and may maintain their values across power cycles. Each vendor may create and manage its own variables without the risk of name conflicts by using a unique *VendorGuid*.
@@ -517,7 +414,7 @@ Each variable has Attributes that define how the firmware stores and maintains t
 
 EFI_VARIABLE_NON_VOLATILE variables are stored in fixed hardware that has a limited storage capacity; sometimes a severely limited capacity. Software should only use a nonvolatile variable when absolutely necessary. In addition, if software uses a nonvolatile variable it should use a variable that is only accessible at boot services time if possible.
 
-A variable must contain one or more bytes of Data. Unless the EFI_VARIABLE_APPEND_WRITE, EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS, or EFI_VARIABLE_ENHANCED _AUTHENTICATED_ACCESS attribute is set (see below), using SetVariable() with a DataSize of zero will cause the entire variable to be deleted. The space consumed by the deleted variable may not be available until the next power cycle.
+A variable must contain one or more bytes of Data. Unless the EFI_VARIABLE_APPEND_WRITE or EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute is set (see below), using SetVariable() with a DataSize of zero will cause the entire variable to be deleted. The space consumed by the deleted variable may not be available until the next power cycle.
 
 If a variable with matching name, GUID, and attributes already exists, its value is updated.
 
@@ -531,17 +428,15 @@ The Attributes have the following usage rules:
 
 -  Setting a data variable with no access attributes causes it to be deleted.
 
--  Unless the EFI_VARIABLE_APPEND_WRITE, EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS, or EFI_VARIABLE_ENHANCED_AUTHENTICATED_WRITE_ACCESS attribute is set, setting a data variable with zero *DataSize* specified, causes it to be deleted.
+-  Unless the EFI_VARIABLE_APPEND_WRITE or EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute is set, setting a data variable with zero *DataSize* specified, causes it to be deleted.
 
 -  Runtime access to a data variable implies boot service access. Attributes that have EFI_VARIABLE_RUNTIME_ACCESS set must also have EFI_VARIABLE_BOOTSERVICE_ACCESS set. The caller is responsible for following this rule.
 
 -  Once  :ref:`efi-boot-services-exitbootservices` is performed, data variables that did not have EFI_VARIABLE_RUNTIME_ACCESS set are no longer visible to :ref:`getvariable`.
 
--  Once ExitBootServices() is performed, only variables that have EFI_VARIABLE_RUNTIME_ACCESS and EFI_VARIABLE_NON_VOLATILE set can be set with SetVariable(). Variables that have runtime access but that are not nonvolatile are read-only data variables once ExitBootServices() is performed. When the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS attribute is set in a SetVariable() call, the authentication shall use the EFI_VARIABLE_AUTHENTICATION_3 descriptor, which will be followed by any descriptors indicated in the Type and Flags fields.
+-  Once ExitBootServices() is performed, only variables that have EFI_VARIABLE_RUNTIME_ACCESS and EFI_VARIABLE_NON_VOLATILE set can be set with SetVariable(). Variables that have runtime access but that are not nonvolatile are read-only data variables once ExitBootServices() is performed.
 
 -  When the EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute is set in a SetVariable() call, the authentication shall use the EFI_VARIABLE_AUTHENTICATION_2 descriptor.
-
--  If both the EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS and the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS attribute are set in a SetVariable() call, then the firmware must return EFI_INVALID_PARAMETER.
 
 -  If the EFI_VARIABLE_APPEND_WRITE attribute is set in a SetVariable() call, then any existing variable value shall be appended with the value of the *Data* parameter. If the firmware does not support the append operation, then the SetVariable() call shall return EFI_INVALID_PARAMETER. If the variable does not exist and EFI_VARIABLE_APPEND_WRITE is set and the size is non-zero, the variable is created. If the variable does not exist and EFI_VARIABLE_APPEND_WRITE is set and the size is zero, the variable is not created and EFI_SUCCESS is returned.
 
@@ -551,16 +446,11 @@ The Attributes have the following usage rules:
 
 -  :ref:`globally-defined-variables` must be created with the attributes defined in the Table :ref:`global-variables` . If a globally defined variable is created with the wrong attributes, the result is indeterminate and may vary between implementations.
 
-
--  If using the EFI_VARIABLE_ENHANCED_AUTHETICATED_ACCESS interface to update the cert authority for a given variable, it is valid for the *Data* region of the payload to be empty. This would update the cert without modifying the data itself. If the *Data* region is empty AND no NewCert is specified, the variable will be deleted (assuming all authorizations are verified).
-
 -  Secure Boot Policy Variable must be created with the EFI_VARIABLE_TIME_BASED_AUTHENTICATED _WRITE_ACCESS attribute set, and the authentication shall use the EFI_VARIABLE_AUTHENTICATION_2 descriptor. If the appropriate attribute bit is not set, then the firmware shall return EFI_INVALID_PARAMETER.
 
 The only rules the firmware must implement when saving a nonvolatile variable is that it has actually been saved to nonvolatile storage before returning EFI_SUCCESS, and that a partial save is not performed. If power fails during a call to SetVariable() the variable may contain its previous value, or its new value. In addition there is no read, write, or delete security protection.
 
 To delete a variable created with the EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute, *SetVariable* must be used with attributes matching the existing variable and the *DataSize* set to the size of the *AuthInfo* descriptor. The *Data* buffer must contain an instance of the *AuthInfo* descriptor which will be validated according to the steps in the appropriate section above referring to updates of Authenticated variables. An attempt to delete a variable created with the EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute for which the prescribed *AuthInfo* validation fails or when called using *DataSize* of zero will fail with an EFI_SECURITY_VIOLATION status. 
-
-To delete a variable created with the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS attribute, *SetVariable* must be used with attributes matching the existing variable and the *DataSize* set to the size of the entire payload including all descriptors and certificates. The *Data* buffer must contain an instance of the EFI_VARIABLE_AUTHENTICATION_3 descriptor which will indicate how to validate the payload according to the description in :ref:`using-the-efi-variable-authentication-3-descriptor`. An attempt to delete a variable created with the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS attribute for which the prescribed validation fails or when called using *DataSize* of zero will fail with an EFI_SECURITY_VIOLATION status.
 
 **Status Codes Returned**
 
@@ -584,7 +474,6 @@ To delete a variable created with the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS
      - The variable in question cannot be deleted.
    * - **EFI_SECURITY_VIOLATION**
      - | The variable could not be written due to 
-       | EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS or 
        | EFI_VARI ABLE_TIME_BASED_AUTHENTICATED_WRITE_ACESS being set, but the payload does NOT pass the validation check carried out by the firmware.
    * - **EFI_NOT_FOUND** 
      - The variable trying to be updated or deleted was not found.
@@ -655,147 +544,6 @@ After the system has transitioned into runtime (after ExitBootServices() is call
        | *MaximumVariableStorageSize*, 
        | *RemainingVariableStorageSize*, 
        | *MaximumVariableSize* are undefined.
-
-
-.. _using-the-efi-variable-authentication-3-descriptor:
-
-Using the EFI_VARIABLE_AUTHENTICATION_3 descriptor
-##################################################
-
-When the attribute EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS is set, the payload buffer (passed into SetVariable() as "Data") shall be constructed as follows:
-
-| // NOTE: "||" indicates concatenation.
-| // NOTE: "[ ]" indicates an optional element.
-|
-| // Example: EFI_VARIABLE_AUTHENTICATION_3_TIMESTAMP_TYPE EFI_VARIABLE_AUTHENTICATION_3 || EFI_TIME || [ NewCert ] || SigningCert || Data
-| 
-| // Example: EFI_VARIABLE_AUTHENTICATION_3_NONCE_TYPE  FI_VARIABLE_AUTHENTICATION_3 || EFI_VARIABLE_AUTHENTICATION_3_NONCE || [ NewCert ] || SigningCert || Data
-|
-
-In this example, NewCert and SigningCert are both instances of WIN_CERTIFICATE_UEFI_GUID. The presence of NewCert is indicated by the EFI_VARIABLE_AUTHENTICATION_3.Flags field (see Definition in SetVariable()). If provided – and assuming the payload passes all integrity and security verifications — this cert will be set as the new authority for the underlying variable, even if the variable is being newly created.
-
-The NewCert element must have a CertType of EFI_CERT_TYPE_PKCS7_GUID, and the CertData must be a DER-encoded SignedData structure per PKCS#7 version 1.5 (RFC 2315), which shall be supported both with and without a DER-encoded ContentInfo structure per PKCS#7 version 1.5. When creating the SignedData structure, the following steps shall be followed:
-
-1. Create a WIN_CERTIFICATE_UEFI_GUID structure where CertType is set to EFI_CERT_TYPE_PKCS7_GUID.
-
-#. Use the x509 cert being added as the new authority to sign its own tbsCertificate data.
-
-#. Construct a DER-encoded PKCS #7 version 1.5 SignedData (see [RFC2315]) with the signed content as follows:
-
-   a - SignedData.version shall be set to 1.
-
-   b - SignedData.digestAlgorithms shall contain the digest algorithm used when preparing the signature.
-
-   c - SignedData.contentInfo.contentType shall be set to id-data.
-
-   d - SignedData.contentInfo.content shall be the tbsCertificate data  that was signed for the new x509 cert.
-
-   e - SignedData.certificates shall contain, at a minimum, the signer’s DER-encoded X.509 certificate.
-
-   f - SignedData.crls is optional.
-
-   g - SignedData.signerInfos shall be constructed as:
-
-   - SignerInfo.version shall be set to 1.
-
-   - SignerInfo.issuerAndSerial shall be present and as in the signer’s certificate.
-
-   - SignerInfo.authenticatedAttributes shall not be present.
-
-   - SignerInfo.digestEncryptionAlgorithm shall be set to the algorithm used to sign the data. 
-
-   - SignerInfo.encryptedDigest shall be present.
-
-   - SignerInfo.unauthenticatedAttributes shall not be present.
-
-#. Set the CertData field to the DER-encoded PKCS#7 SignedData value.
-
-A caller to SetVariable() attempting to create, update, or delete a variable with the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS set shall perform the following steps to create the SignedData structure for SigningCert:
-
-1. Create an EFI_VARIABLE_AUTHENTICATION_3 Primary Descriptor with the following values:
-
-   a - Version shall be set appropriate to theversion of metadata headers being used (currently 1).
-
-   b - Type should be set based on caller specifications (see    EFI_VARIABLE_AUTHENTICATION_3 *descriptor* under SetVariable()).
-
-   c - MetadataSize can be ignored for now, and will be updated when constructing the final payload.
-
-   d - Flags shall be set based on caller specifications. 
-
-#. A Secondary Descriptor may need to be created based on the Type.
-
-   a - For EFI_VARIABLE_AUTHENTICATION_3_TIMESTAMP_TYPE type,this will be an instance of EFI_TIME set to thecurrent time.
-
-   b - For EFI_VARIABLE_AUTHENTICATION_3_NONCE_TYPE type, this will be an instance of EFI_VARIABLE_AUTHENTICATION_3_NONCE  updated with NonceSize set based on caller specifications (must not be zero), and Nonce (informal structure member) set to:
-
-   - All zeros to request that the platform create a random nonce. 
-
-   - Caller specified value for a pre-generated nonce.
-
-#. Hash a serialization of the payload. Serialization shall contain the following elements in this order:
-
-   a - VariableName, VendorGuid, Attributes, and the Secondary Descriptor if it exists for this Type.
-
-   b - Variable’s new value (i.e., the Data parameter’s new variable content).
-
-   c - If this is an update to or deletion of a variable with type EFI_VARIABLE_AUTHENTICATION_3_NONCE, serialize the current nonce. The current nonce is the one currently associated with this variable, not the one in the Secondary Descriptor. Serialize only the nonce buffer contents, not the size or any additional data. If this is an attempt to create a new variable (i.e., there is no current nonce), skip this step.
-
-   d - If the authority cert for this variable is being updated and the EFI_VARIABLE_AUTHENTICATION_3.Flags field indicates the presence of a NewCert structure, serialize the entire NewCert structure (described at  the beginning of this section).
-
-#. Sign the resulting digest.
-
-#. Create a WIN_CERTIFICATE_UEFI_GUID structure where CertType is set to EFI_CERT_TYPE_PKCS7_GUID.
-
-#. Construct a DER-encoded PKCS #7 version 1.5 SignedData (see [RFC2315]) following the steps described for NewCert (step 3), above, with the following exception:
-
-   a - SignedData.contentInfo.content shall beabsent (the content is provided in the Data parameterto the SetVariable() call)
-
-#. Construct the final payload for SetVariable() according to the  descriptions for "payload buffer" at the beginning of this section.
-
-#. Update the EFI_VARIABLE_AUTHENTICATION_3.MetadataSize field to
-   include all parts of the final payload except "Data".
-
-Firmware that implements the SetVariable() services and supports the EFI_VARIABLE_ENHANCED _AUTHENTICATED_ACCESS attribute shall do the following in response to being called:
-
-#. Read the EFI_VARIABLE_AUTHENTICATION_3 descriptor to determine what type of authentication isbeing performed and how to parse the rest of the payload.
-
-#. Verify that SigningCert.CertType EFI_CERT_TYPE_PKCS7_GUID.
-
-   a - If EFI_VARIABLE_AUTHENTICATION_3.Flags field indicates presence of a NewCert, verify thatNewCert.CertType is EFI_CERT_TYPE_PKCS7_GUID.
-
-   b - If either fails, return EFI_INVALID_PARAMETER.
-
-#. If the variable already exists, verify that the incoming type matches the existing type.
-
-#. Verify that any *EFI_TIME* structures have Pad1, Nanosecond, TimeZone, Daylight, and Pad2 fields set to zero.
-
-#. If EFI_VARIABLE_AUTHENTICATION_3_NONCE_TYPE:
-
-   a - Verify that NonceSize is greater than zero.If zero, return EFI_INVALID_PARAMETER.
-
-   b - If incoming nonce is all zeros, confirm that platform supports generating random nonce. If unsupported, return EFI_UNSUPPORTED.
-
-   c - If nonce is specified and variable already exists, verify that incoming nonce does not match existing nonce. If identical, return EFI_INVALID_PARAMETER.
-
-#. If EFI_VARIABLE_AUTHENTICATION_3_TIMESTAMP_TYPE and variable already exists, verify that new timestamp is chronologically greater than current timestamp.
-
-#. Verify the payload signature by:
-
-   a - Parsing entire payload according to descriptors.
-
-   b - Using descriptor contents (and, if necessary, metadata from existing variable) to construct the serialization described previously in this section (step 3 of the SetVariable() instructions).
-
-   c - Compute the digest and compare with the result of applying the SigningCert’s public key to the signature.
-
-#. If the variable already exists, verify that the SigningCert authority is the same as the authority already associated with the variable.
-
-#. If NewCert is provided, verify the NewCert signature by:
-
-   a - Parsing entire payload according to descriptors.
-
-   b - Compute a digest of the tbsCertificate of x509 certificate in NewCert and compare with the result of applying NewCert’s public key to the signature.
-
-   c - If this fails, return EFI_SECURITY_VIOLATION.
 
 
 .. _using-the-efi-variable-authentication-2-descriptor:

@@ -740,7 +740,7 @@ Secure Boot Mode transitions to User Mode or Deployed Mode shall take effect imm
 Enrolling The Platform Key
 ##########################
 
-The platform owner enrolls the public half of the Platform Key (PKpub) by calling the UEFI Boot Service *SetVariable()* as specified in :ref:`using-the-efi-variable-authentication-3-descriptor`. If the platform is in setup mode, then the new PKpub may be signed with its PKpriv counterpart. If the platform is in user mode, then the new PKpub must be signed with the current PKpriv. When the platform is in setup mode, a successful enrollment of a Platform Key shall cause the platform to immediately transition to user mode. 
+The platform owner enrolls the public half of the Platform Key (PKpub) by calling the UEFI Boot Service *SetVariable()* as specified in :ref:`using-the-efi-variable-authentication-2-descriptor`. If the platform is in setup mode, then the new PKpub may be signed with its PKpriv counterpart. If the platform is in user mode, then the new PKpub must be signed with the current PKpriv. When the platform is in setup mode, a successful enrollment of a Platform Key shall cause the platform to immediately transition to user mode. 
 
 The authenticated PK variable can always be read but can only be written if the platform is in setup mode, or if the platform is in user mode and the provided PKpub is signed with the current PKpriv. 
 
@@ -782,13 +782,13 @@ Enrolling Key Exchange Keys
 
 Key exchange keys are stored in a signature database as described in "Signature Database" below. The signature database is stored as an authenticated UEFI variable. 
 
-The platform owner enrolls the key exchange keys by either calling *SetVariable()* as specified in  :ref:`using-the-efi-variable-authentication-3-descriptor`  with the *EFI_VARIABLE_APPEND_WRITE* attribute set and the *Data* parameter containing the new key(s), or by reading the database using *GetVariable(),* appending the new key exchange key to the existing keys and then writing the database using *SetVariable()* as specified in  :ref:`using-the-efi-variable-authentication-3-descriptor`  without the *EFI_VARIABLE_APPEND_WRITE* attribute set. 
+The platform owner enrolls the key exchange keys by either calling *SetVariable()* as specified in  :ref:`using-the-efi-variable-authentication-2-descriptor`  with the *EFI_VARIABLE_APPEND_WRITE* attribute set and the *Data* parameter containing the new key(s), or by reading the database using *GetVariable(),* appending the new key exchange key to the existing keys and then writing the database using *SetVariable()* as specified in  :ref:`using-the-efi-variable-authentication-2-descriptor`  without the *EFI_VARIABLE_APPEND_WRITE* attribute set. 
 
 The authenticated UEFI variable that stores the key exchange keys (KEKs) can always be read but only be written if:
 
 -   The platform is in user mode, and the provided variable data is signed with the current PK\ :sub:`priv`\ ; *or* if
 
--   The platform is in setup mode, in which case the variable can be written without a signature validation, but the *SetVariable()* call needs to be formatted in accordance with the procedure for authenticated variables in :ref:`using-the-efi-variable-authentication-3-descriptor`.
+-   The platform is in setup mode, in which case the variable can be written without a signature validation, but the *SetVariable()* call needs to be formatted in accordance with the procedure for authenticated variables in :ref:`using-the-efi-variable-authentication-2-descriptor`.
 
 
 The name and GUID of the Key Exchange Key variable are specified in :ref:`globally-defined-variables`, "Globally Defined Variables." The platform vendor may provide a default set of Key Exchange Keys in the KEKDefault variable described in :ref:`globally-defined-variables`. If present, these keys (or a subset) may optionally be used when performing the initial enrollment of Key Exchange Keys. If any are to be used, they may be parsed from the variable and enrolled as described above.
@@ -1335,7 +1335,7 @@ These authenticated UEFI variables that store the signature databases (db, dbx, 
 
   or if
 
-- The platform is in setup mode (in this case the variables can be written without a signature validation, but the *SetVariable()* call needs to be formatted in accordance with the procedure for authenticated variables in :ref:`using-the-efi-variable-authentication-3-descriptor`)
+- The platform is in setup mode (in this case the variables can be written without a signature validation, but the *SetVariable()* call needs to be formatted in accordance with the procedure for authenticated variables in :ref:`using-the-efi-variable-authentication-2-descriptor`)
 
 The signature databases are in the form of Signature Databases, as described in "Signature Database" above. 
 
@@ -1503,7 +1503,7 @@ The Authorized device signature databases are stored as UEFI authenticated varia
 These authenticated UEFI variables that store the device signature databases (devdb) can always be read but can only be written if:
 
   - The platform is in user mode and the provided variable data is signed with the private half of the platform private key (PKpriv); or if
-  - The platform is in setup mode (in this case the variables can be written without a signature validation, but the SetVariable() call needs to be formatted in accordance with the procedure for authenticated variables in the  :ref:`using-the-efi-variable-authentication-3-descriptor` section.
+  - The platform is in setup mode (in this case the variables can be written without a signature validation, but the SetVariable() call needs to be formatted in accordance with the procedure for authenticated variables in the  :ref:`using-the-efi-variable-authentication-2-descriptor` section.
 
 The platform vendor may provide a default set of entries for the Signature Database in the devdbDefault variable described in the :ref:`globally-defined-variables` section.
 

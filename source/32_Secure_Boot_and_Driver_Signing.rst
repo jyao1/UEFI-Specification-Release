@@ -1433,7 +1433,15 @@ The security database *db* must either contain an entry with a hash value of the
 
 – C. Any entry with *SignatureListType* of *EFI_CERT_X509_GUID,* with *SignatureData* which contains a certificate with the same Issuer, Serial Number, and To-Be-Signed hash included in any certificate in the signing chain of the signature being verified.
 
-Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). Only one hash or signature is required to be present in *db* in order to pass validation, so long as neither the hash of the binary nor any present signature is reflected in dbx.
+Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). The firmware must do the validation according to the following:
+
+- A. If the hash of the binary is in *dbx*, then the image shall fail the validation.
+
+- B. Else if the hash of the binary is in *db*, then the image shall pass the validation.
+
+- C. Else if one of signatures is in *db* and is not in *dbx*, then the image shall pass the validation.
+
+- D. Else the image shall fail the validation.
 
 Then, based on this match or its own policy, the firmware can decide whether or not to launch the UEFI image.
 

@@ -708,6 +708,8 @@ The NewCert element must have a CertType of EFI_CERT_TYPE_PKCS7_GUID, and the Ce
 
    - SignerInfo.unauthenticatedAttributes shall not be present.
 
+   - Only one SignerInfo shall be present.
+
 #. Set the CertData field to the DER-encoded PKCS#7 SignedData value.
 
 A caller to SetVariable() attempting to create, update, or delete a variable with the EFI_VARIABLE_ENHANCED_AUTHENTICATED_ACCESS set shall perform the following steps to create the SignedData structure for SigningCert:
@@ -846,9 +848,11 @@ A caller that invokes the SetVariable() service with the EFI_VARIABLE_TIME_BASED
 
    — SignerInfo.digestEncryptionAlgorithm shall be set to the algorithm used to sign the data. 
 
-   — SiginerInfo.encryptedDigest shall be present
+   — SignerInfo.encryptedDigest shall be present
 
    — SignerInfo.unauthenticatedAttributes shall not be present.
+
+   — Only one SignerInfo shall be present.
 
 5. Set AuthInfo.CertData to the DER-encoded PKCS #7 SignedData value.
 

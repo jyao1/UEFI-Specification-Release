@@ -689,6 +689,7 @@ The devAuthBoot variable is an 8-bit unsigned integer that defines whether the p
 
 The devdbDefault variable, if present, contains the platform-defined device authentication signature database. This is not used at runtime but is provided in order to allow the OS to recover the OEM's default key setup. The contents of this variable do not include an EFI_VARIABLE_AUTHENTICATION2 structure.
 
+.. note:: **DEPRECATED: SignatureSupport Variable** - The *SignatureSupport variable is deprecated and should no longer be used. This feature will be removed from future versions of the specification.
 
 .. _boot-option-recovery:
 

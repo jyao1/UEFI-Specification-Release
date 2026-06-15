@@ -478,6 +478,12 @@ Creating Image Digests from Images
 
 One of the pieces required for creating a digital signature is the image digest. For a detailed description on how to create image digests from PE/COFF images, refer to the "Creating the PE Image Hash" section of the Microsoft Authenticode Format specification (see References). 
 
+.. _supported-digests:
+
+Supported Digests
+$$$$$$$$$$$$$$$$$
+
+sha1 was deprecated in 2011 and disallowed in digital signatures in 2013 by NIST so it is recommended that implementations not support it as a digest.
 
 .. _uefi-driver-signing-overview-code-definitions:
 

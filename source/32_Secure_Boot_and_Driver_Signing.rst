@@ -1307,6 +1307,8 @@ The signature database is checked when the UEFI Boot Manager is about to start a
 
 If a firmware supports the *EFI_CERT_X509_SHA*_GUID* signature types, it should support the RFC3161 timestamp specification. Images whose signature matches one of these types in the forbidden signature database shall only be considered forbidden if the firmware either does not support timestamp verification, or the signature type has a time of revocation equal to zero, or the timestamp does not pass verification against the authorized timestamp and forbidden signature databases, or finally the signature type's time of revocation is less than or equal to the time recorded in the image signature's timestamp. If the timestamp's signature is authorized by the authorized timestamp database and the time recorded in the timestamp is less than the time of revocation, the image shall not be considered forbidden provided it is not forbidden by any other entry in the forbidden signature database. Finally, this requires that firmware supporting timestamp verification must support the authorized timestamp database and have a suitable time stamping authority certificate in that database. 
 
+If a firmware supports the *EFI_CERT_X509_SHA*_GUID* signature types, it should not compare the certificate validity period against system date and time. This is because the system date and time are insecure and may not be correctly set on some systems so doing validity comparisons could result in spurious and hard to diagnose image validation failures. The upshot is that any X509 certificate should always be treated as unexpired but it may be still revoked using a time based revocation.
+
 
 .. _authorized-user:
 

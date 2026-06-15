@@ -1435,6 +1435,8 @@ The security database *db* must either contain an entry with a hash value of the
 
 Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). Only one hash or signature is required to be present in *db* in order to pass validation, so long as neither the hash of the binary nor any present signature is reflected in dbx.
 
+If an image includes multiple signatures, the firmware shall evaluate each signature sequentially in the order they appear in the image's certificate table. For each signature, the firmware shall verify it against *db* and *dbx* as described in the above step. If a signature is accepted, the image is accepted and the remaining signatures are not evaluated. If a signature is not accepted, the firmware shall proceed to evaluate the next signature. If all signatures have been evaluated and none is accepted, the image is rejected.
+
 Then, based on this match or its own policy, the firmware can decide whether or not to launch the UEFI image.
 
 4. Start UEFI Image. If the UEFI Image is approved, then it is launched normally.

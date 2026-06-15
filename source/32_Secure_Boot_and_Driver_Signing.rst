@@ -788,7 +788,11 @@ The authenticated UEFI variable that stores the key exchange keys (KEKs) can alw
 
 -   The platform is in user mode, and the provided variable data is signed with the current PK\ :sub:`priv`\ ; *or* if
 
--   The platform is in setup mode, in which case the variable can be written without a signature validation, but the *SetVariable()* call needs to be formatted in accordance with the procedure for authenticated variables in :ref:`using-the-efi-variable-authentication-3-descriptor`.
+-   The platform is in setup mode, in which case the variable can be written without a signature validation, but the *SetVariable()* call needs to be formatted in accordance with the procedure for authenticated variables in :ref:`using-the-efi-variable-authentication-3-descriptor`; *or* if
+
+-   The platform is in user mode, and the *EFI_VARIABLE_APPEND_WRITE* attribute is set, and the provided variable data is signed with any current KEK\ :sub:`priv`\ . This allows an existing KEK holder to append new key exchange keys without requiring the platform key on long-running secured systems. Note that only append operations are permitted with KEK\ :sub:`priv`\  signing; full replacement or deletion of the KEK variable requires PK\ :sub:`priv`\  signing.
+
+**NOTE**: *The KEK signed append capability enables key exchange key authorities to update their certificates (e.g., for rotation or adding subordinate CAs) without requiring access to the platform key. The append-only restriction ensures that no KEK holder can remove other KEK authorities from the system, preserving the trust hierarchy established by the platform owner.*
 
 
 The name and GUID of the Key Exchange Key variable are specified in :ref:`globally-defined-variables`, "Globally Defined Variables." The platform vendor may provide a default set of Key Exchange Keys in the KEKDefault variable described in :ref:`globally-defined-variables`. If present, these keys (or a subset) may optionally be used when performing the initial enrollment of Key Exchange Keys. If any are to be used, they may be parsed from the variable and enrolled as described above.
@@ -1149,7 +1153,7 @@ This identifies a signature containing the SM3 hash of an X.509 certificate's To
 
 This *SignatureType* describes a pseudo-signature which will not facilitate authentication. It is only meaningful within a signature list used for authenticating writes through *SetVariable(),* and is only effective if it is the only signature present in that signature list. It allows a signature list to be populated without providing any means for *SetVariable()* to succeed. This signature type is intended for use on a platform with an external out-of-band management agent (e.g. hypervisor or service processor). When a platform is configured such that only signatures of this *SignatureType* are available for authenticating writes to a variable, that variable may only be modified by the external management agent using a platform-specific interface. 
 
-When a write may be authenticated using any signature from multiple signature lists, the presence of this signature in one of those signature lists does not inhibit the use of signatures present in the other signature lists. For example, if this signature is placed in PK, an attempt to write to db using *SetVariable()* will still succeed if it is signed by a valid KEKpriv, but a write to PK or KEK through *SetVariable()* cannot succeed because no PKpriv exists. 
+When a write may be authenticated using any signature from multiple signature lists, the presence of this signature in one of those signature lists does not inhibit the use of signatures present in the other signature lists. For example, if this signature is placed in PK, an attempt to write to db using *SetVariable()* will still succeed if it is signed by a valid KEKpriv, but a write to PK through *SetVariable()* cannot succeed because no PKpriv exists. An append to KEK through *SetVariable()* may still succeed if signed by a valid KEKpriv. 
 
 The *SignatureHeader* size shall always be 0. The *SignatureSize* shall always be 16 (size of *SignatureOwner* component) + 1 byte. The one byte of *SignatureData* exists only for compatibility reasons; It should be written as zero, and any value read should be ignored.
 

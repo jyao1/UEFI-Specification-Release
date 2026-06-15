@@ -868,7 +868,7 @@ Firmware that implements the SetVariable() service and supports the EFI_VARIABLE
 
    — using the descriptor contents and other parameters to (a) construct the input to the digest algorithm; (b) computing the digest; and (c) comparing the digest with the result of applying the signer’s public key to the signature.
 
-5. If the variable is the global PK variable or the global KEK variable, verify that the signature has been made with the current Platform Key.
+5. If the variable is the global PK variable, verify that the signature has been made with the current Platform Key. If the variable is the global KEK variable, verify that the signature has been made with the current Platform Key, or if the *EFI_VARIABLE_APPEND_WRITE* attribute is set, verify that the signer's certificate chains to a certificate in the Key Exchange Key database.
 
    - If the variable is the "db", "dbt", "dbr", or "dbx" variable mentioned in step 3, verify that the signer’s certificate chains to a certificate in the Key Exchange Key database (or that the signature was made with the current Platform Key).
 

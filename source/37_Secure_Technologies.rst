@@ -4975,3 +4975,283 @@ This function only removes new attributes with the bit mask 1 and ignore the att
      - Attributes for the requested memory region are controlled by system firmware and cannot be updated via the protocol.
 
 
+.. _efi-crypto-indicator-table:
+
+EFI Crypto Indicator Table
+--------------------------
+
+EFI_CRYPTO_INDICATOR_TABLE
+##########################
+
+
+**Summary**
+
+The EFI Crypto Indicator Table (ECIT) provides a mechanism for identifying cryptographic algorithm support built into the firmware for the various declared features. 
+This information provides the platform support for UEFI applications and operating systems to dynamically determine a compatible cryptographic algorithm to use when engaging
+with the firmware on UEFI platforms. This is especially important for UEFI platforms that support crypto agility where the supported algorithms may be updated over time
+and may vary across different platforms. Each entry in the ECIT declares a feature using a GUID, length, and an opaque data block.  This data block is typed based on
+the GUID of the feature. Each entry has a length so that iteration is supported for both known and unknown entry types. 
+
+**Notes on Publishing**
+
+The ECIT is both an EFI_CONFIGURATION_TABLE and an ACPI table (for an ACPI compliant firmware).  The ECIT will have the common ACPI SDT header to support both environments..
+
+If ACPI is supported:
+  1. The EFI_CONFIGURATION_TABLE pointer must reference the exact memory used for the ACPI table. 
+  2. The ECIT shall be stored in memory of type *EfiAcpiReclaimMemory* to ensure it is available after ExitBootServices
+
+If ACPI is not supported:
+  1. The ECIT can be stored in memory of type *EfiBootServicesData*.
+
+See :ref:`efi-configuration-table-and-properties-table` for description of how to publish ECIT using *EFI_CONFIGURATION_TABLE*.
+
+
+**EFI_CONFIGURATION_TABLE GUID**
+
+.. code-block::
+
+  // {1768b8b1-1605-401a-bc49-d612d2b98c4e}
+  #define EFI_CRYPTO_INDICATOR_TABLE_GUID \
+    {0x1768b8b1, 0x1605, 0x401a,\
+    {0xbc, 0x49, 0xd6, 0x12, 0xd2, 0xb9, 0x8c, 0x4e}}
+
+**Table Structure**
+
+.. code-block::
+
+  // Current Entry Version
+  #define EFI_CRYPTO_INDICATOR_TABLE_VERSION 1
+
+  typedef struct {
+    char   Signature[4];       
+    UINT32 Length;              
+    UINT8  Version;           
+    UINT8  Checksum;            
+    char   OemId[6];           
+    char   OemTableId[8];      
+    UINT32 OemRevision;        
+    UINT32 CreatorID;
+    UINT32 CreatorRevision;    
+    // ECIT Specific fields           
+	  UINT8   NumberOfEntries; 
+	  UINT8    Reserved[3];      //Padding. Reserved for future use, should be set to zero          
+	  EFI_CRYPTO_INDICATOR_ENTRY    Entries[];
+  } EFI_CRYPTO_INDICATOR_TABLE;
+
+**Members**
+
+Signature[4]
+  The signature for this table.  This should be set to "ECIT" to allow for easy identification.
+
+Length
+  Length of entire table, including header and all entries
+
+Version
+  The version of the *EFI_CRYPTO_INDICATOR_TABLE* and *EFI_CRYPTO_INDICATOR_ENTRY* used in this table. 
+  This field must be set to EFI_CRYPTO_INDICATOR_TABLE_VERSION.
+
+Checksum
+  Checksum of entire table, including header and all entries, should be set such that the entire table sums to zero.
+
+OemID, OemTableId, OemRevision, CreatorID, CreatorRevision
+  Standard ACPI SDT header fields to identify the OEM and creator of the table.
+  These fields are not required for parsing the ECIT but provide standard ACPI identification information.
+
+NumberOfEntries
+  The number of valid entries within the table.
+
+Entries
+  Array of *EFI_CRYPTO_INDICATOR_ENTRY*
+
+
+**Related Definitions**
+
+.. code-block::
+
+   typedef struct {
+      EFI_GUID       FeatureIdentifier;
+      UINT16         EntryLength;  //sizeof(EFI_CRYPTO_INDICATOR_ENTRY) + sizeof(EntryData)
+      UINT8          Reserved[6];  //Padding.Reserved for future use, should be set to zero
+      UINT8          EntryData[];  
+    } EFI_CRYPTO_INDICATOR_ENTRY;
+
+**Members**
+
+  FeatureIdentifier
+    The Feature Identifier field contains a GUID that identifies the feature.  This GUID can be a well known GUID for 
+    features defined in this specification or it can be a custom GUID with a custom definition.  In order to parse and make sense of an entry
+    the iterator must understand the unique type/size and definition of the *EntryData*.  Iterating the full table can be done without understanding
+    all of the entries.  It is expected that for most cases the FeatureIdentifier GUID will be unique but some entries may provide additional unique context
+    in the *EntryData*.
+
+  EntryLength
+    The number of bytes used for this EFI_CRYPTO_INDICATOR_ENTRY.  
+    If not naturally aligned on an 8 byte boundary it should be padded to ensure the next entry is properly aligned.
+
+  EntryData
+    A well defined data block.  The format is defined by the FeatureIdentifier guid.  
+
+  Feature Identifiers
+  ####################
+
+  Feature Identifiers define the purpose/usage of cryptographic capabilities in the firmware.  The identifier
+  then also defines the format of the *EntryData* for that entry.
+  The *EntryData* will declare the specific capabilities and supported algorithms for that feature.
+  
+  .. note:: The GUID naming should be prefixed with `EFI_` to follow convention that these are well known GUIDs defined within the UEFI specification.  Custom GUIDs for custom features should be prefixed with a unique vendor prefix to avoid conflicts with well known features and other vendor features.
+
+
+  Image Verification Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  Image Verification feature is related to UEFI Secure Boot code signing. 
+  UEFI follows Authenticode with PKCS7 signatures and X509 certificates.  The ECIT entry for this feature will declare the supported OIDs
+  for the code signing algorithms that are supported for UEFI Secure Boot image verification.
+  
+  This feature entry is *required* for any system that supports UEFI Secure Boot.
+
+.. code-block::
+
+   //
+   // {08324cfc-efe6-4211-a858-d4cac8915aef}
+   //
+   #define EFI_ECIT_FEATURE_IMAGE_VERIFICATION_GUID \
+     {0x08324cfc, 0xefe6, 0x4211, \
+     {0xa8, 0x58, 0xd4, 0xca, 0xc8, 0x91, 0x5a, 0xef}}
+
+
+   typedef struct {
+     CHAR8 SupportedAlgorithmOids[];  //Comma separated value (CSV) string of ASCII CHAR8 characters with null terminator.
+   } EFI_CIE_DATA_IMAGE_VERIFICATION_ENTRY;
+
+  Secure Boot Authorization Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  Secure Boot Authorization feature indicates what EFI_SIGNATURE_LIST types are supported in the UEFI Secure Boot signature database (db) for
+  matching against a code signing authority used for Image Verification.  This also supports raw hashing types to align with the UEFI defined
+  hash based image authentication mechanism.  
+
+  This feature entry is *required* for any system that supports UEFI Secure Boot
+
+.. code-block::
+   //
+   // {335f880f-180f-43d9-8ed9-ce584ed9b6f0}
+   //
+   #define EFI_ECIT_FEATURE_SECURE_BOOT_AUTHORIZATION_GUID \
+     {0x335f880f, 0x180f, 0x43d9, \
+     {0x8e, 0xd9, 0xce, 0x58, 0x4e, 0xd9, 0xb6, 0xf0}}
+
+   typedef struct {
+    EFI_GUID SignatureListSupportedTypes[];  //See type guids defined in related definitions of EFI_SIGNATURE_LIST  
+   } EFI_CIE_DATA_SECURE_BOOT_AUTHORIZATION_ENTRY;
+
+
+  Secure Boot Servicing Authorization Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  Secure Boot Servicing Authorization feature indicates what EFI_SIGNATURE_LIST types are supported in the Secure Boot signature database (PK,KEK) for
+  matching against a DB/DBX authenticated variable used for updating databases.
+
+  This feature entry is *required* for any system that supports UEFI Secure Boot
+
+.. code-block::
+   //
+   // {304b3849-4906-40ea-8ade-751d6da7d4f9}
+   //
+   #define EFI_ECIT_FEATURE_SECURE_BOOT_SERVICING_AUTHORIZATION_GUID \
+     {0x304b3849, 0x4906, 0x40ea, \
+     {0x8a, 0xde, 0x75, 0x1d, 0x6d, 0xa7, 0xd4, 0xf9}}
+
+   typedef struct {
+    EFI_GUID SignatureListSupportedTypes[];  //See type guids defined in related definitions of EFI_SIGNATURE_LIST  
+   } EFI_CIE_DATA_SECURE_BOOT_SERVICING_AUTHORIZATION_ENTRY;
+
+
+  Secure Boot Image Revocation Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  Secure Boot Image Revocation feature is related to UEFI Secure Boot DBX and revocations types supported.  Revocations can be image hash based or
+  based on signing authority.  
+
+   This feature entry is *required* for any system that supports UEFI Secure Boot
+
+.. code-block::
+   //
+   // {02913331-2f71-43db-8277-7be88ecc651c}
+   //
+   #define EFI_ECIT_FEATURE_IMAGE_REVOCATION_GUID \
+     {0x02913331, 0x2f71, 0x43db, \
+     {0x82, 0x77, 0x7b, 0xe8, 0x8e, 0xcc, 0x65, 0x1c}}
+
+   typedef struct {
+    EFI_GUID SignatureListSupportedTypes[];  //See type guids defined in related definitions of EFI_SIGNATURE_LIST  
+   } EFI_CIE_DATA_IMAGE_REVOCATION_ENTRY;
+
+  Authenticated Variable Signed Update Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  Authenticated Variable Signed Update feature is related to UEFI authenticated variables and the algorithms
+  used to sign and verify the update payloads. These payloads must use X509 certificates and PKCS7 signatures.
+
+  note:: This may be a different set of OIDs than the Image Verification feature because it is not limited by Authenticode.
+
+  This feature entry is *required* for any system that supports UEFI Secure Boot
+
+.. code-block::
+   // 
+   // {03092d2c-9a52-4c5c-8bf5-eaf04f45229d}
+   //
+   #define EFI_ECIT_FEATURE_AUTHENTICATED_VARIABLE_GUID \
+     {0x03092d2c, 0x9a52, 0x4c5c, \
+     {0x8b, 0xf5, 0xea, 0xf0, 0x4f, 0x45, 0x22, 0x9d}}
+
+   typedef struct {
+    CHAR8 SupportedAlgorithmOids[];  //Comma separated value (CSV) string of ASCII CHAR8 characters with null terminator.
+   } EFI_CIE_DATA_AUTH_VARS_ENTRY;
+
+  System Firmware Update Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  System Firmware Update feature is related to UEFI System Firmware Update and the algorithms
+  used to sign and verify the update payloads.
+
+.. code-block::
+    // {8417f337-8e42-4657-aeae-9b21a4b90258}
+    #define EFI_ECIT_FEATURE_SYSTEM_FIRMWARE_UPDATE_GUID \
+      {0x8417f337, 0x8e42, 0x4657, \
+      {0xae, 0xae, 0x9b, 0x21, 0xa4, 0xb9, 0x02, 0x58}}
+     
+    typedef struct {
+      CHAR8 SupportedAlgorithmOids[];  //Comma separated value (CSV) string of ASCII CHAR8 characters with null terminator.
+    } EFI_CIE_DATA_SYS_FW_UPDATE_ENTRY;
+
+  ESRT Device Firmware Update Feature Entry
+  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+  ESRT Device Firmware Update feature is related to UEFI System Firmware Update via UEFI ESRT and the algorithms
+  used to sign and verify the update payloads.  This is relevant for devices that have their own independent firmware
+  that can be updated via UEFI mechanisms and that want to declare the cryptographic capabilities for those updates.  
+  This is also relevant for the platform firmware to declare the capabilities related to ESRT updates that may be used by devices and drivers.
+
+.. code-block::
+  // {41c7bd17-6bd4-4df5-aaad-8987164ead4c}
+  #define EFI_ECIT_FEATURE_ESRT_FIRMWARE_UPDATE_GUID \
+    {0x41c7bd17, 0x6bd4, 0x4df5, \
+    {0xaa, 0xad, 0x89, 0x87, 0x16, 0x4e, 0xad, 0x4c}} 
+   
+   typedef struct {
+     EFI_GUID   Esrt_Guid;  //Guid used to identify the esrt noted
+     CHAR8 SupportedAlgorithmOids[];  //Comma separated value (CSV) string of ASCII CHAR8 characters with null terminator.  
+   } EFI_CIE_DATA_ESRT_ENTRY; 
+
+
+
+
+
+*** Other Feature Entries***
+  
+  Other features can be defined by other specifications or vendors.  
+
+   //#define EFI_ECIT_FEATURE_VERIFIED_BOOT_GUID\
+   //#define INTEL_ECIT_FEATURE_BOOT_GUARD_GUID\
+   //#define AMD_ECIT_FEATURE_PLATFORM_SECURE_BOOT_GUID\

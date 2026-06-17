@@ -1435,13 +1435,17 @@ The security database *db* must either contain an entry with a hash value of the
 
 Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). The firmware must do the validation according to the following:
 
-- A. If the hash of the binary is in *dbx*, then the image shall fail the validation.
+- A. If any hash of the binary is in *dbx*, then the image shall fail the validation.
 
-- B. Else if the hash of the binary is in *db*, then the image shall pass the validation.
+- B. Else if any hash of the binary is in *db*, then the image shall pass the validation.
 
-- C. Else if one of signatures is in *db* and is not in *dbx*, then the image shall pass the validation.
+- C. Else if at least one of the image’s signatures can be verified up to a certificate that is present in *db* (that certificate is referred to as the *trust anchor*), and neither the trust anchor nor any certificate below it in the signing chain (that is, the trust anchor and every certificate between it and the signing (leaf) certificate, inclusive), nor the To-Be-Signed hash of any of those certificates, is present in *dbx*, then the image shall pass the validation.
 
 - D. Else the image shall fail the validation.
+
+When matching a signature against *db* or *dbx*, a match can occur at any level of the certificate chain of that signature. Only the trust anchor found in *db* and the certificates below it (toward the signing (leaf) certificate) are evaluated against *dbx*; any certificate above the trust anchor (that is, closer to the root) is not evaluated against *dbx* and is ignored even if it is present in *dbx*.
+
+  **NOTE**: *For example, if an intermediate certificate is present in db and the root certificate is present in dbx, the image passes validation, because the root certificate is above the trust anchor (the intermediate certificate) and is therefore ignored. Conversely, if the root certificate is present in db and an intermediate certificate is present in dbx, the image fails validation, because the intermediate certificate is below the trust anchor (the root certificate).*
 
 Then, based on this match or its own policy, the firmware can decide whether or not to launch the UEFI image.
 

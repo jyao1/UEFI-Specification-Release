@@ -1435,7 +1435,13 @@ The security database *db* must either contain an entry with a hash value of the
 
 Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). Only one hash or signature is required to be present in *db* in order to pass validation, so long as neither the hash of the binary nor any present signature is reflected in dbx.
 
-If an image includes multiple signatures, the firmware shall evaluate each signature sequentially in the order they appear in the image's certificate table. For each signature, the firmware shall verify it against *db* and *dbx* as described in the above step. If a signature is accepted, the image is accepted and the remaining signatures are not evaluated. If a signature is not accepted, the firmware shall proceed to evaluate the next signature. If all signatures have been evaluated and none is accepted, the image is rejected.
+If an image includes multiple signatures, the firmware shall evaluate each signature sequentially in the order they appear in the image's certificate table. For each signature, the firmware shall perform both of the following checks:
+
+– 1. Digital signature verification. The firmware shall compute the image digest (as described in `Embedded Signatures`_ ) and cryptographically verify that the signature is a valid digital signature over that digest using the public key of the signer's certificate. A signature that fails this cryptographic verification shall not be accepted, regardless of the contents of *db* and *dbx*.
+
+– 2. Signature database evaluation. The firmware shall verify the signature against *db* and *dbx* as described in the above step.
+
+A signature is accepted only if its digital signature verification succeeds **and** it is authorized by *db* and not forbidden by *dbx*. If a signature is accepted, the image is accepted and the remaining signatures are not evaluated. If a signature is not accepted, the firmware shall proceed to evaluate the next signature. If all signatures have been evaluated and none is accepted, the image is rejected.
 
 Then, based on this match or its own policy, the firmware can decide whether or not to launch the UEFI image.
 

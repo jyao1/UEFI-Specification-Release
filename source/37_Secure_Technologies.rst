@@ -2586,9 +2586,11 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 **Summary**
 
-This function processes a buffer containing binary DER-encoded detached PKCS7 signature. The hash of the signed data content is calculated and passed by the caller. Function verifies the signature of the content is valid and signing certificate was not revoked and is contained within a list of trusted signers. 
+This function processes a buffer containing binary DER-encoded detached PKCS7 signature. The hash of the signed data content is calculated and passed by the caller. Function verifies the signature of the content is valid, the signing certificate was not revoked and is contained within a list of trusted signers, and the signature hash is not in the RevokedDb list under any supported hash, where this forbidden check takes precedence over any authorization in the AllowedDb list. 
 
 .. note:: The current UEFI specification allows for a variety of hashes. In order to be secure, the users of this protocol should loop over each hash to see if the binary signature is authorized.
+
+.. note:: This function is intended to support verification of PE/COFF images signed using the Authenticode format (see the “Attribute Certificate Table” and Authenticode sections of the Microsoft PE/COFF Specification), as well as other detached CMS signatures. When used for PE/COFF image verification, the caller is responsible for locating the embedded *WIN_CERTIFICATE* signature in the image’s Certificate (Attribute Certificate) Table and passing it in *Signature,* and for computing the Authenticode hash of the image per the PE/COFF Specification and passing it in *InHash.* The function does not parse PE/COFF images and does not extract the signature from the image. An implementation of this function **must** support CMS signatures whose signed content is an Authenticode *SpcIndirectDataContent* structure; the function must verify such Authenticode-wrapped signatures and must not fail solely because the signed content is in Authenticode format rather than a generic CMS *Data* content type.
 
 
 **Prototype**
@@ -2627,12 +2629,12 @@ InHashSize
   The size in bytes of *InHash* buffer.
 
 AllowedDb
-  Pointer to a list of pointers to *EFI_SIGNATURE_LIST* structures. The list is terminated by a null pointer. The *EFI_SIGNATURE_LIST* structures contain lists of X.509 certificates of approved signers. See Chapter 27 for definition of *EFI_SIGNATURE_LIST.* Function recognizes signer certificates of type *EFI_CERT_X509_GUID.* Any hash certificate in *AllowedDb* list is ignored by this function. Function returns success if signer of the buffer is within this list (and not within *RevokedDb* ). This parameter is required. 
+  Pointer to a list of pointers to *EFI_SIGNATURE_LIST* structures. The list is terminated by a null pointer. The *EFI_SIGNATURE_LIST* structures contain lists of X.509 certificates or hashes of X.509 certificate of approved signers. See Chapter 27 for definition of *EFI_SIGNATURE_LIST.* Function recognizes signer certificates of type *EFI_CERT_X509_GUID.* Any hash certificate in *AllowedDb* list is ignored by this function. Function returns success if signer of the buffer is within this list (and not within *RevokedDb* ). This parameter is required. For image-verification use, image-hash entries of type *EFI_CERT_SHA256_GUID* (and other supported *EFI_CERT_SHAxxx_GUID* types) are ignored by this function; the function recognizes certificate-hash entries of type *EFI_CERT_X509_SHA256_GUID* (and other supported *EFI_CERT_X509_SHAxxx_GUID* types), and returns success if the signer is found in *AllowedDb* and not forbidden by *RevokedDb.* 
 
 .. TODO correct above reference
 
 RevokedDb
-  Pointer to a list of pointers to *EFI_SIGNATURE_LIST* structures. The list is terminated by a null pointer. List of X.509 certificates of revoked signers and revoked file hashes. Signature verification will always fail if the signer of the file or the hash of the data component of the buffer is in *RevokedDb* list. This parameter is optional and caller may pass Null if not required.
+  Pointer to a list of pointers to *EFI_SIGNATURE_LIST* structures. The list is terminated by a null pointer. List of X.509 certificates or hashes of X.509 certificate of revoked signers and revoked file hashes. Signature verification will always fail if the signer of the file or the hash of the data component of the buffer is in *RevokedDb* list. This parameter is optional and caller may pass Null if not required. For image-verification use, the function recognizes image-hash entries of type *EFI_CERT_SHA256_GUID* (and other supported *EFI_CERT_SHAxxx_GUID* types) and certificate-hash entries of type *EFI_CERT_X509_SHA256_GUID* (and other supported *EFI_CERT_X509_SHAxxx_GUID* types); hash-based revocation is evaluated against the supplied *InHash* (image hash) and against the To-Be-Signed hashes of certificates in the signing chain, as applicable. Consistent with UEFI image verification, *EFI_CERT_X509_GUID* entries in *RevokedDb* are deprecated for revocation; *EFI_CERT_X509_SHAxxx_GUID* entries should be used to revoke signing certificates.
 
 TimeStampDb
   Optional pointer to a list of pointers to *EFI_SIGNATURE_LIST* structures. The list is terminated by a null pointer. This parameter can be used to pass a list of X.509 certificates of trusted time stamp counter-signers. 
@@ -2641,6 +2643,8 @@ TimeStampDb
 **Description**
 
 This function processes the buffer *Signature* for PCKS7 verification using hash of the data calculated and pass by caller in the *InHash* buffer. The data that was signed using PKCS is referred to as the ‘Message’. In the process of creating a signature of the message, a hash of the message bytes, called the ‘Message Digest’, is encrypted using a private key held in secret by the signer. The encrypted hash and the X.509 public key certificate of the signer are formatted according to the ASN.1 PKCS#7 Schema (See References). Any data embedded within the PKCS structure is ignored by the function. This function does not support extraction of signature from executable file formats. The address of the PKCS Signature block must be located and passed by the called. 
+
+The function supports both generic detached CMS signatures and Authenticode-format CMS signatures (*SpcIndirectDataContent* ). When verifying a PE/COFF image, the caller must locate the *WIN_CERTIFICATE* CMS signature block within the image’s Certificate (Attribute Certificate) Table and pass its address in *Signature,* and must compute the image’s Authenticode hash per the PE/COFF Specification and pass it in *InHash.* 
 
 The hash size passed in *InHashSize* must match the size of the signed hash embedded within the PKCS signature structure or an error is returned. 
 
@@ -2652,7 +2656,13 @@ The *VerifySignature()* function performs several steps. First, the buffer conta
 
 .. note:: When a signing certificate is matched to AllowedDb or RevokedDb lists, a match can occur against an entry in the list at any level of the chain of X.509 certificates present in the PCKS certificate list. This supports signing with a certificate that chains to one of the certificates in the AllowedDb or RevokedDb lists.
 
+.. note:: When matching a signature against AllowedDb or RevokedDb, a match can occur at any level of the certificate chain of that signature. Only the trust anchor found in AllowedDb and the certificates below it (toward the signing (leaf) certificate) are evaluated against RevokedDb; any certificate above the trust anchor (that is, closer to the root) is not evaluated against RevokedDb and is ignored even if it is present in RevokedDb. For example, if an intermediate certificate is present in AllowedDb and the root certificate is present in RevokedDb, the image passes validation, because the root certificate is above the trust anchor (the intermediate certificate) and is therefore ignored. Conversely, if the root certificate is present in AllowedDb and an intermediate certificate is present in RevokedDb, the image fails validation, because the intermediate certificate is below the trust anchor (the root certificate).
+
 .. note:: Because this function uses hashes and the specification contains a variety of hash choices, you should be aware that the check against the RevokedDb list will improperly succeed if the signature is revoked using a different hash algorithm. For this reason, you should either cycle through all UEFI supported hashes to see if one is forbidden, or rely on a single hash choice only if the UEFI signature authority only signs and revokes with a single hash. 
+
+.. note:: Because hash entries in *AllowedDb* are ignored by this function, a caller should evaluate hash entries in *AllowedDb* directly. In that case the caller must ensure that any hash present in *RevokedDb* rejects the image, even if any hash is present in *AllowedDb;* the *RevokedDb* match takes precedence over any *AllowedDb* match.
+
+.. note:: When used to implement UEFI Secure Boot image validation, the contents of AllowedDb and RevokedDb and the verification result must conform to the requirements of :ref:`authorization-process` , bullet item 3 (UEFI Image Validation Succeeded). In particular, verification must not succeed if RevokedDb contains any matching entry under any UEFI-supported hash algorithm, and this forbidden check takes precedence over any matching authorization in AllowedDb.
 
 
 **Related Definitions**

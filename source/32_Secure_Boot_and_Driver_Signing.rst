@@ -1433,7 +1433,15 @@ The security database *db* must either contain an entry with a hash value of the
 
 – C. Any entry with *SignatureListType* of *EFI_CERT_X509_GUID,* with *SignatureData* which contains a certificate with the same Issuer, Serial Number, and To-Be-Signed hash included in any certificate in the signing chain of the signature being verified.
 
-Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). The firmware must do the validation according to the following:
+Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification), conveyed as multiple *WIN_CERTIFICATE* entries where each entry contains an independent CMS *SignedData* structure. The firmware shall support this mechanism, and any one of these entries that satisfies the validation rules below is sufficient for the image to pass validation.
+
+Other mechanisms by which a PE/COFF image may structurally carry more than one signature are not supported for UEFI Secure Boot validation. For example:
+
+- A nested signature carried within the unsigned attributes of a *SignerInfo* structure. The firmware shall not process a nested signature, and shall ignore it if present.
+
+- Multiple *SignerInfo* structures within a single CMS *SignedData* structure. The firmware shall not process more than one *SignerInfo* structure within a single *SignedData* structure.
+
+The firmware must do the validation according to the following:
 
 - A. If any hash of the binary is in *dbx*, then the image shall fail the validation.
 

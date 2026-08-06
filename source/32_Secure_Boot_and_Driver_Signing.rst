@@ -1433,7 +1433,27 @@ The security database *db* must either contain an entry with a hash value of the
 
 – C. Any entry with *SignatureListType* of *EFI_CERT_X509_GUID,* with *SignatureData* which contains a certificate with the same Issuer, Serial Number, and To-Be-Signed hash included in any certificate in the signing chain of the signature being verified.
 
-Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification). Only one hash or signature is required to be present in *db* in order to pass validation, so long as neither the hash of the binary nor any present signature is reflected in dbx.
+Multiple signatures are allowed to exist in the binary’s certificate table (as per the "Attribute Certificate Table" section of the Microsoft PE/COFF Specification), conveyed as multiple *WIN_CERTIFICATE* entries where each entry contains an independent CMS *SignedData* structure. The firmware shall support this mechanism, and any one of these entries that satisfies the validation rules below is sufficient for the image to pass validation.
+
+Other mechanisms by which a PE/COFF image may structurally carry more than one signature are not supported for UEFI Secure Boot validation. For example:
+
+- A nested signature carried within the unsigned attributes of a *SignerInfo* structure. The firmware shall not process a nested signature, and shall ignore it if present.
+
+- Multiple *SignerInfo* structures within a single CMS *SignedData* structure. The firmware shall not process more than one *SignerInfo* structure within a single *SignedData* structure.
+
+The firmware must do the validation according to the following:
+
+- A. If any hash of the binary is in *dbx*, then the image shall fail the validation.
+
+- B. Else if any hash of the binary is in *db*, then the image shall pass the validation.
+
+- C. Else if at least one of the image’s signatures can be verified up to a certificate that is present in *db* (that certificate is referred to as the *trust anchor*), and neither the trust anchor nor any certificate below it in the signing chain (that is, the trust anchor and every certificate between it and the signing (leaf) certificate, inclusive), nor the To-Be-Signed hash of any of those certificates, is present in *dbx*, then the image shall pass the validation.
+
+- D. Else the image shall fail the validation.
+
+When matching a signature against *db* or *dbx*, a match can occur at any level of the certificate chain of that signature. Only the trust anchor found in *db* and the certificates below it (toward the signing (leaf) certificate) are evaluated against *dbx*; any certificate above the trust anchor (that is, closer to the root) is not evaluated against *dbx* and is ignored even if it is present in *dbx*.
+
+  **NOTE**: *For example, if an intermediate certificate is present in db and the root certificate is present in dbx, the image passes validation, because the root certificate is above the trust anchor (the intermediate certificate) and is therefore ignored. Conversely, if the root certificate is present in db and an intermediate certificate is present in dbx, the image fails validation, because the intermediate certificate is below the trust anchor (the root certificate).*
 
 Then, based on this match or its own policy, the firmware can decide whether or not to launch the UEFI image.
 

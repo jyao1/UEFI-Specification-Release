@@ -1227,7 +1227,7 @@ This identifies a signature containing the SHA512 hash of an X.509 certificate's
 .. code-block::
 
    #define EFI_CERT_V2_X509_SHA512_GUID \
-     { 0x4d46147a1, 0xfa79, 0x43a9, \
+     { 0x4d46147a, 0xfa79, 0x43a9, \
      { 0x88, 0x36, 0x00, 0x34, 0x1c, 0x70, 0x8a, 0x70 } }
 
 

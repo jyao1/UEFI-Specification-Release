@@ -668,11 +668,9 @@ The following variables are Secure Boot Policy Variables:
 
 -  **dbx** - The forbidden signature database under *EFI_IMAGE_SECURITY_DATABASE_GUID*.
 
--  **dbt** - The timestamp signature database under *EFI_IMAGE_SECURITY_DATABASE_GUID*.
-
 -  **dbr** - The authorized recovery signature database under *EFI_IMAGE_SECURITY_DATABASE_GUID*.
 
-All Secure Boot Policy Variables have well-defined revocation mechanisms: PK and KEK can be revoked by updating or deleting them with proper authentication; db, dbx, dbt, and dbr can be revoked via the dbx forbidden signature database; and OsRecoveryOrder and OsRecovery#### can be revoked via dbr, KEK, or PK.
+All Secure Boot Policy Variables have well-defined revocation mechanisms: PK and KEK can be revoked by updating or deleting them with proper authentication; db, dbx, and dbr can be revoked via the dbx forbidden signature database; and OsRecoveryOrder and OsRecovery#### can be revoked via dbr, KEK, or PK.
 
 The *AuditMode* variable is an 8-bit unsigned integer that defines whether the system is currently operating in Audit Mode.
 

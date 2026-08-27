@@ -645,15 +645,32 @@ The *Key####* variable associates a key press with a single boot option. Each *K
 
 The *HwErrRecSupport* variable contains a binary UINT16 that supplies the level of support for Hardware Error Record Persistence (:ref:`hardware-error-record-persistence` ) that is implemented by the platform. If the value is not present, then the platform implements no support for Hardware Error Record Persistence. A value of zero indicates that the platform implements no support for Hardware Error Record Persistence. A value of 1 indicates that the platform implements Hardware Error Record Persistence as defined in  :ref:`hardware-error-record-persistence`. Firmware initializes this variable. All other values are reserved for future use.
 
-The *SetupMode* variable is an 8-bit unsigned integer that defines whether the system is should require authentication (0) or not (1) on *SetVariable()* requests to Secure Boot Policy Variables. Secure Boot Policy Variables include:
+The *SetupMode* variable is an 8-bit unsigned integer that defines whether the system is should require authentication (0) or not (1) on *SetVariable()* requests to Secure Boot Policy Variables. See :ref:`secure-boot-policy-variables` for the complete list of Secure Boot Policy Variables.
 
--  The global variables *PK* , *KEK* , and *OsRecoveryOrder*
+.. _secure-boot-policy-variables:
 
--  All variables named *OsRecovery####* under all VendorGuids
+Secure Boot Policy Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
--  All variables with the VendorGuid *EFI_IMAGE_SECURITY_DATABASE_GUID.*
+Secure Boot Policy Variables are explicitly named variables with defined revocation mechanisms that are used to control secure boot and recovery operations. These variables must be created using the *EFI_VARIABLE_AUTHENTICATION_2* structure. See :ref:`setvariable` and :ref:`using-the-efi-variable-authentication-2-descriptor` for more information.
 
-Secure Boot Policy Variables must be created using the *EFI_VARIABLE_AUTHENTICATION_2* structure.
+The following variables are Secure Boot Policy Variables:
+
+-  **PK** (Platform Key) - The global variable under *EFI_GLOBAL_VARIABLE* GUID that contains the current Platform Key. This is the root of trust for Secure Boot.
+
+-  **KEK** (Key Exchange Key) - The global variable under *EFI_GLOBAL_VARIABLE* GUID that contains the current Key Exchange Key database.
+
+-  **OsRecoveryOrder** - The global variable under *EFI_GLOBAL_VARIABLE* GUID that contains an array of *EFI_GUID* structures specifying namespaces for OS-defined recovery entries.
+
+-  **OsRecovery####** - Variables under any VendorGuid that contain OS-defined recovery entries. These variables share the same structure as Boot#### variables.
+
+-  **db** - The authorized signature database under *EFI_IMAGE_SECURITY_DATABASE_GUID*.
+
+-  **dbx** - The forbidden signature database under *EFI_IMAGE_SECURITY_DATABASE_GUID*.
+
+-  **dbr** - The authorized recovery signature database under *EFI_IMAGE_SECURITY_DATABASE_GUID*.
+
+All Secure Boot Policy Variables have well-defined revocation mechanisms: PK and KEK can be revoked by updating or deleting them with proper authentication; db, dbx, and dbr can be revoked via the dbx forbidden signature database; and OsRecoveryOrder and OsRecovery#### can be revoked via dbr, KEK, or PK.
 
 The *AuditMode* variable is an 8-bit unsigned integer that defines whether the system is currently operating in Audit Mode.
 

@@ -1329,6 +1329,8 @@ The Authorized, Forbidden, Timestamp, and Recovery signature databases are store
 | *EFI_IMAGE_SECURITY_DATABASE2,* and
 | *EFI_IMAGE_SECURITY_DATABASE3,* respectively.
 
+.. note:: The use of the EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute for variables other than Secure Boot Policy Variables is deprecated. See :ref:`secure-boot-policy-variables` and :ref:`using-the-efi-variable-authentication-2-descriptor` for details.
+
 These authenticated UEFI variables that store the signature databases (db, dbx, dbr, or dbt) can always be read but can only be written if:
 
 - The platform is in user mode and the provided variable data is signed with the private half of a previously enrolled key exchange key (KEKpriv \*), or the platform private key (PK\ :sub:`priv`\ ); 
